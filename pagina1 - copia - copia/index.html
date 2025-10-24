@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Dashboard | Sucursal Amaya</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+
+  <style>
+    body { background-color:#eef2f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    /* Login */
+    #loginBox {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: rgba(0,0,0,0.2);
+      z-index:1000;
+    }
+    #loginBox .login-inner {
+      background:#fff; padding:2rem; border-radius:10px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.2); text-align:center;
+    }
+    #loginBox input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
+    #loginBox button { padding:10px 20px; border:none; border-radius:5px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
+    #loginBox button:hover { background:#1d4ed8; }
+
+    .navbar-title { width:100%; text-align:center; font-weight:700; color:#1f2937; font-size:1.3rem; }
+    .main-content-center { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; margin-top:3rem; }
+    .main-buttons a { 
+      margin:0.5rem; padding:0.9rem 1.3rem; border-radius:0.5rem; 
+      background-color:#2563eb; color:#fff; font-weight:600; text-decoration:none; transition:0.3s; 
+    }
+    .main-buttons a:hover { background-color:#1d4ed8; text-decoration:none; }
+    .pb-2.mb-4.border-bottom h1 { font-size:2.5rem; color:#1e3a8a; }
+    .pb-2.mb-4.border-bottom p { font-size:1.3rem; color:#4b5563; }
+
+    @keyframes pulse {
+      from { box-shadow:0 0 5px rgba(255,204,0,0.5); }
+      to { box-shadow:0 0 20px rgba(255,204,0,1); }
+    }
+
+    @media (max-width:768px) {
+      .main-buttons { flex-direction:column; }
+      .main-buttons a { width:80%; margin:auto 0.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Box -->
+<div id="loginBox">
+  <div class="login-inner">
+    <h2>Iniciar Sesión</h2>
+    <input type="text" id="usuario" placeholder="Usuario">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Entrar</button>
+    <p id="mensajeLogin" style="color:red;"></p>
+  </div>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-light sticky-top bg-light shadow">
+  <div class="container w-100">
+    <div class="navbar-title mx-auto font-weight-bold text-primary" style="font-size:1.3rem;">
+      DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar shadow-sm collapse">
+      <div class="sidebar-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link active" href="./index.html">INICIO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./gestores.html">GESTORES DE COBRO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./personal.html">PERSONAL DE CAMPO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./reportes.html">REPORTES</a></li>
+          <li class="nav-item"><a class="nav-link" href="./empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./mora.html">MORA</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+
+      <!-- Aviso de cumpleaños -->
+      <div id="avisoCumple" style="
+        display:none;
+        background: linear-gradient(135deg, #fff3cd, #ffe8a1);
+        color:#5a4100;
+        padding:20px;
+        border-radius:15px;
+        border:2px solid #ffcc00;
+        text-align:center;
+        font-weight:600;
+        box-shadow:0 4px 10px rgba(0,0,0,0.15);
+        animation: pulse 1.5s infinite alternate;
+        margin-top: 20px;
+      ">
+        <h4 style="font-weight:700; margin-bottom:10px;">🎉 ¡Feliz Cumpleaños! 🎉</h4>
+        <p id="textoCumple" style="font-size:1.1rem;"></p>
+        <p style="margin-top:10px;">🎈 Que este día esté lleno de alegría y buenos momentos. 🎈</p>
+      </div>
+
+      <div class="main-content-center">
+        <div class="pb-2 mb-4 border-bottom">
+          <h1>👋 Bienvenido/a al Departamento de Cobros</h1>
+          <p>"Transformando la gestión de cartera en resultados eficientes"</p>
+        </div>
+
+        <div class="main-buttons d-flex flex-wrap justify-content-center">
+          <a href="./mision.html">MISIÓN</a>
+          <a href="./vision.html">VISIÓN</a>
+          <a href="./valores.html">VALORES</a>
+          <a href="./acerca.html">ACERCA DE LA PAGINA</a>
+        </div>
+
+        <div class="mt-4">
+          <p>Aquí puedes agregar información importante, accesos rápidos o notificaciones del departamento.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // --- Login ---
+  document.addEventListener("DOMContentLoaded", function() {
+    const usuarioGuardado = localStorage.getItem("usuario");
+    const loginBox = document.getElementById("loginBox");
+    if(!usuarioGuardado) {
+      loginBox.style.display = "flex"; // mostrar login
+    } else {
+      loginBox.style.display = "none"; // usuario ya ingresó antes
+    }
+
+    const mensaje = localStorage.getItem("mensajeCumple");
+    const aviso = document.getElementById("avisoCumple");
+    const texto = document.getElementById("textoCumple");
+
+    if (mensaje) {
+      texto.textContent = mensaje.replace("🎉", "").replace("🎂", "").trim();
+      aviso.style.display = "block";
+    } else {
+      aviso.style.display = "none";
+    }
+  });
+
+  function login() {
+    const usuario = document.getElementById("usuario").value;
+    const password = document.getElementById("password").value;
+
+    // Usuario y contraseña
+    if(usuario === "ALEJANDRO" && password === "CASA123456") {
+      localStorage.setItem("usuario", usuario); // recordar usuario
+      document.getElementById("loginBox").style.display = "none"; // oculta login
+    } else {
+      document.getElementById("mensajeLogin").textContent = "Usuario o contraseña incorrectos";
+    }
+  }
+</script>
+
+</body>
+</html>

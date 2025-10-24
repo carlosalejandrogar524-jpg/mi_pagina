@@ -1,0 +1,50 @@
+[
+  {
+    "MES": "ENERO 2025",
+    "PERSONAL": "Maria Lopez",
+    "FUNCION": "Supervisor",
+    "CREDITOS": 0,
+    "MORA_RECUPERADA": 3000,
+    "OBJ_MORA": 5000,
+    "GESTIONES": 0,
+    "VISITAS_E": 5,
+    "VISITAS_NE": 2,
+    "%_RECUPERACION": "60.00%"
+  },
+  {
+    "MES": "ENERO 2025",
+    "PERSONAL": "Ana Torres",
+    "FUNCION": "Supervisor",
+    "CREDITOS": 0,
+    "MORA_RECUPERADA": 2500,
+    "OBJ_MORA": 4000,
+    "GESTIONES": 0,
+    "VISITAS_E": 4,
+    "VISITAS_NE": 1,
+    "%_RECUPERACION": "62.50%"
+  },
+  {
+    "MES": "FEBRERO 2025",
+    "PERSONAL": "Maria Lopez",
+    "FUNCION": "Supervisor",
+    "CREDITOS": 0,
+    "MORA_RECUPERADA": 4000,
+    "OBJ_MORA": 5000,
+    "GESTIONES": 0,
+    "VISITAS_E": 6,
+    "VISITAS_NE": 1,
+    "%_RECUPERACION": "80.00%"
+  },
+  {
+    "MES": "FEBRERO 2025",
+    "PERSONAL": "Ana Torres",
+    "FUNCION": "Supervisor",
+    "CREDITOS": 0,
+    "MORA_RECUPERADA": 3000,
+    "OBJ_MORA": 4000,
+    "GESTIONES": 0,
+    "VISITAS_E": 5,
+    "VISITAS_NE": 1,
+    "%_RECUPERACION": "75.00%"
+  }
+]

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mora | Sucursal Amaya</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { background-color:#eef2f6; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+.navbar-title { width:100%; text-align:center; font-weight:700; color:#1f2937; font-size:1.3rem;}
+.content-container { margin-top:2rem; background:#fff; border-radius:1rem; padding:2rem; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+h1 { color:#1e3a8a; font-weight:700; margin-bottom:1.5rem; text-align:center;}
+.btn-custom { border:none; border-radius:10px; font-weight:600; padding:0.5rem 1.2rem; transition:all 0.2s ease-in-out; font-size:0.95rem;}
+.btn-buscar { background-color:#2563eb; color:white; box-shadow:0 3px 6px rgba(37,99,235,0.3);}
+.btn-buscar:hover { background-color:#1d4ed8; transform:scale(1.03);}
+.btn-secundario { background-color:#1f2937; color:white; box-shadow:0 3px 6px rgba(0,0,0,0.3);}
+.btn-secundario:hover { background-color:#111827; transform:scale(1.03);}
+.cliente-box { background-color:#dbeafe; border-radius:1rem; padding:1.8rem; box-shadow:inset 0 0 10px rgba(37,99,235,0.3); margin-top:1.5rem; max-width:900px; margin:auto; border:2px solid #93c5fd;}
+#resumenCliente { background:#f0f9ff; border:2px solid #93c5fd; border-radius:10px; padding:15px; margin-top:20px; text-align:left; display:none;}
+#estadoCarga { text-align:center; color:#1e3a8a; font-weight:600; margin-top:1rem;}
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-light sticky-top bg-light shadow">
+  <div class="container w-100">
+    <div class="navbar-title mx-auto font-weight-bold text-primary">
+      DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
+    </div>
+  </div>
+</nav>
+
+<div class="container content-container">
+  <h1>💳 Consulta de Clientes en Mora</h1>
+  <p style="text-align:center;">Escriba el número de tarjeta y presione <strong>Buscar</strong> para ver la información del cliente.</p>
+
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <div class="d-flex align-items-center mb-2">
+      <input type="text" id="numeroTarjeta" class="form-control mr-2" placeholder="Ingrese número de tarjeta..." style="max-width:220px;">
+      <button class="btn btn-custom btn-buscar" id="btnBuscar">🔍 Número de Tarjeta</button>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-custom btn-secundario mr-2" id="btnGenerarReporte">📊 Generar Reporte de Mora</button>
+      <button class="btn btn-custom btn-buscar" id="btnEstadoCuenta">📄 Generar Estado de Cuenta</button>
+    </div>
+  </div>
+
+  <div class="cliente-box">
+    <div id="resumenCliente"></div>
+    <div id="estadoCarga">⏳ Cargando datos desde Google Sheets...</div>
+  </div>
+</div>
+
+<script>
+const SHEET_URL_RAW = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRbmVB9wmGK70VAeV9IfsKPbrtHSSGkpoyudYQkqaGVjBUxso-c5MmtBV6j-0qUxbrr4ws6P3GsSklK/pub?gid=1512254828&single=true&output=csv";
+const SHEET_URL = "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(SHEET_URL_RAW);
+
+let clientes = [];
+let datosCargados = false;
+
+// Normaliza headers y parsea CSV
+function normalizeHeader(header){return header.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'');}
+function parseCSV(text){
+  const rows=text.trim().split(/\r?\n/).map(r=>r.split(','));
+  const headers=rows[0].map(h=>normalizeHeader(h));
+  return rows.slice(1).map(r=>{
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(r[i]||'').trim());
+    return obj;
+  });
+}
+
+async function cargarDatos(){
+  const estado=document.getElementById("estadoCarga");
+  try{
+    const res=await fetch(SHEET_URL);
+    const text=await res.text();
+    clientes=parseCSV(text);
+    datosCargados=true;
+    estado.textContent=`✅ Datos cargados correctamente (${clientes.length} registros)`;
+    estado.style.color="green";
+  }catch(err){
+    console.error(err);
+    estado.textContent="❌ Error al cargar los datos.";
+    estado.style.color="red";
+  }
+}
+
+function buscarCliente(){
+  const valor=document.getElementById("numeroTarjeta").value.trim();
+  const estado=document.getElementById("estadoCarga");
+  const resumen=document.getElementById("resumenCliente");
+  if(!valor){estado.textContent="⚠️ Ingrese un número de tarjeta."; estado.style.color="orange"; resumen.style.display="none"; return;}
+  if(!datosCargados){estado.textContent="⏳ Aún cargando los datos..."; estado.style.color="orange"; resumen.style.display="none"; return;}
+  const cliente=clientes.find(c=>c.numerodetarjeta?.toString().trim()===valor);
+  if(cliente){
+    estado.textContent="✅ Cliente encontrado.";
+    estado.style.color="green";
+    resumen.innerHTML=`
+      <h5 style="color:#1e3a8a; font-weight:700;">Resumen del Cliente</h5>
+      <p><strong>Número de Tarjeta:</strong> ${cliente.numerodetarjeta}</p>
+      <p><strong>Nombre del Cliente:</strong> ${cliente.nombrecliente || cliente.nombre || 'N/A'}</p>
+      <p><strong>Dirección:</strong> ${cliente.direccion || 'N/A'}</p>
+      <p><strong>Teléfono:</strong> ${cliente.telefono || 'N/A'}</p>
+    `;
+    resumen.style.display="block";
+  }else{
+    estado.textContent="❌ Cliente no encontrado.";
+    estado.style.color="red";
+    resumen.style.display="none";
+  }
+}
+
+document.getElementById("btnBuscar").addEventListener("click", buscarCliente);
+document.getElementById("numeroTarjeta").addEventListener("keydown", e=>{if(e.key==="Enter"){e.preventDefault(); buscarCliente();}});
+document.getElementById("btnEstadoCuenta").addEventListener("click", ()=>{
+  const tarjeta=document.getElementById("numeroTarjeta").value.trim();
+  if(!tarjeta){alert("Ingrese un número de tarjeta antes de generar el estado de cuenta."); return;}
+  window.open(`estado_cuenta.html?tarjeta=${tarjeta}`,"_blank");
+});
+
+document.getElementById("btnGenerarReporte").addEventListener("click", ()=>{
+  if(!datosCargados){alert("Aún no se han cargado los datos."); return;}
+  const opcion=prompt("Seleccione opción:\n1) Generar por Día\n2) Generar por Zona\n3) Generar Toda la Deuda\nIngrese 1, 2 o 3:");
+  if(!opcion) return;
+  let tipoFiltro="";
+  if(opcion==="1") tipoFiltro="dia";
+  else if(opcion==="2") tipoFiltro="zona";
+  else if(opcion==="3") tipoFiltro="toda";
+  else{alert("Opción inválida."); return;}
+  
+  const win=window.open("","_blank");
+  win.document.write(`<html><head><title>Reporte Mora</title>
+  <style>
+    body{font-family:sans-serif; padding:20px;}
+    table{border-collapse:collapse; width:100%;}
+    th,td{border:1px solid #333; padding:6px; text-align:left;}
+    th{background:#1e3a8a; color:white;}
+    input, select{padding:4px; margin:5px; border-radius:5px;}
+    .total{font-weight:bold; margin-top:10px;}
+  </style></head><body>
+  <h2>📋 Reporte de Mora - Sucursal Amaya</h2>
+  <div id="filtros"></div>
+  <div class="total" id="totalDeuda"></div>
+  <table id="tablaReporte">
+    <thead><tr>
+      <th>Número de Tarjeta</th>
+      <th>Nombre</th>
+      <th>Teléfono</th>
+      <th>Dirección</th>
+      <th>Zona</th>
+      <th>Día de Gestión</th>
+      <th>Deuda Total</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  </body></html>`);
+
+  const tabla=win.document.getElementById("tablaReporte").getElementsByTagName("tbody")[0];
+  const totalDiv=win.document.getElementById("totalDeuda");
+  const filtrosDiv=win.document.getElementById("filtros");
+
+  let filtroInput=null;
+  if(tipoFiltro==="dia"){
+    filtrosDiv.innerHTML=`<label>Día de la Semana: <select id="filtro"><option value="">Todos</option><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option></select></label>`;
+  }else if(tipoFiltro==="zona"){
+    filtrosDiv.innerHTML=`<label>Zona: <input type="text" id="filtro" placeholder="Escriba zona..."></label>`;
+  }
+
+  function renderTabla(){
+    let valorFiltro="";
+    if(tipoFiltro!=="toda") valorFiltro=win.document.getElementById("filtro").value.toLowerCase();
+    tabla.innerHTML="";
+    let suma=0;
+    clientes.forEach(c=>{
+      const dia=(c.diasemana||"").toLowerCase();
+      const zona=(c.zona||"").toLowerCase();
+      let deuda=parseFloat((c.deudatotal||"0").replace(/[^0-9.-]+/g,""))||0;
+      let mostrar=false;
+      if(tipoFiltro==="toda") mostrar=true;
+      else if(tipoFiltro==="dia" && (!valorFiltro || dia===valorFiltro)) mostrar=true;
+      else if(tipoFiltro==="zona" && (!valorFiltro || zona.includes(valorFiltro))) mostrar=true;
+      if(mostrar){
+        tabla.innerHTML+=`<tr>
+          <td>${c.numerodetarjeta}</td>
+          <td>${c.nombrecliente || c.nombre || 'N/A'}</td>
+          <td>${c.telefono || 'N/A'}</td>
+          <td>${c.direccion || 'N/A'}</td>
+          <td>${c.zona || 'N/A'}</td>
+          <td>${c.diasemana || 'N/A'}</td>
+          <td>$${deuda.toFixed(2)}</td>
+        </tr>`;
+        suma+=deuda;
+      }
+    });
+    totalDiv.textContent=`💰 Deuda Total Mostrada: $${suma.toFixed(2)}`;
+  }
+
+  renderTabla();
+  if(tipoFiltro!=="toda") win.document.getElementById("filtro").addEventListener("input", renderTabla);
+});
+
+cargarDatos();
+</script>
+</body>
+</html>

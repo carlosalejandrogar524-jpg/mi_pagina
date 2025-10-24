@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Información del Personal | Sucursal Amaya</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+
+  <style>
+    .cumpleanero {
+      background-color: #fff3cd !important;
+      font-weight: bold;
+      border-left: 5px solid #ffcc00;
+      transition: background-color 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-light sticky-top bg-light shadow">
+  <div class="container w-100">
+    <div class="navbar-title mx-auto font-weight-bold text-primary" style="font-size:1.3rem;">
+      DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+      <div class="sidebar-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link" href="index.html">INICIO</a></li>
+          <li class="nav-item"><a class="nav-link" href="gestores.html">GESTORES DE COBRO</a></li>
+          <li class="nav-item"><a class="nav-link" href="personal.html">PERSONAL DE CAMPO</a></li>
+          <li class="nav-item"><a class="nav-link" href="reportes.html">REPORTES</a></li>
+          <li class="nav-item"><a class="nav-link active" href="empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+      <div class="pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Información del Personal</h1>
+        <p class="lead">Datos del personal de la sucursal.</p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-sm" id="tablaPersonal">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>DUI</th>
+              <th>Teléfono</th>
+              <th>Puesto</th>
+              <th>Fecha de Nacimiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Juan Perez</td>
+              <td>01234567-8</td>
+              <td>5555-1234</td>
+              <td>Cobrador</td>
+              <td>12/03/1985</td>
+            </tr>
+            <tr>
+              <td>Carlos Ruiz</td>
+              <td>12345678-9</td>
+              <td>5555-2345</td>
+              <td>Cobrador</td>
+              <td>05/06/1990</td>
+            </tr>
+            <tr>
+              <td>Maria Lopez</td>
+              <td>87654321-0</td>
+              <td>5555-5678</td>
+              <td>Supervisor</td>
+              <td>25/07/1990</td>
+            </tr>
+            <tr>
+              <td>Ana Torres</td>
+              <td>98765432-1</td>
+              <td>5555-6789</td>
+              <td>Supervisor</td>
+              <td>10/10/1992</td> <!-- 👈 prueba con fecha de HOY para verificar -->
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const hoy = new Date();
+  const diaHoy = hoy.getDate();
+  const mesHoy = hoy.getMonth() + 1; // los meses van de 0 a 11
+  const cumpleaneros = [];
+
+  const filas = document.querySelectorAll("#tablaPersonal tbody tr");
+
+  filas.forEach(fila => {
+    const nombreCelda = fila.cells[0];
+    const fechaTexto = fila.cells[4].textContent.trim();
+
+    // Asegura formato dd/mm/yyyy
+    const partes = fechaTexto.split("/");
+    if (partes.length !== 3) return;
+
+    const diaNac = parseInt(partes[0], 10);
+    const mesNac = parseInt(partes[1], 10);
+
+    if (diaNac === diaHoy && mesNac === mesHoy) {
+      fila.classList.add("cumpleanero");
+      nombreCelda.innerHTML += " 🎂";
+      cumpleaneros.push(nombreCelda.textContent.replace(" 🎂", "").trim());
+    }
+  });
+
+  if (cumpleaneros.length > 0) {
+    const mensaje = `🎉 Hoy está de cumpleaños: ${cumpleaneros.join(", ")} 🎂`;
+    localStorage.setItem("mensajeCumple", mensaje);
+  } else {
+    localStorage.removeItem("mensajeCumple");
+  }
+});
+</script>
+
+</body>
+</html>

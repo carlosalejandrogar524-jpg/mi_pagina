@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Detalle de Personal | Sucursal Amaya</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+<style>
+body { background-color:#f5f6fa; }
+.table-custom th, .table-custom td { font-size:0.85rem; padding:0.4rem; }
+.card-resumen { text-align:center; color:#fff; padding:1rem; border-radius:0.5rem; }
+.bg-recuperado { background: linear-gradient(90deg,#28a745,#85e085);}
+.bg-objetivo { background: linear-gradient(90deg,#007bff,#66b3ff);}
+.bg-promedio { background: linear-gradient(90deg,#ffc107,#ffe066); color:#000;}
+.bg-meta { background: linear-gradient(90deg,#dc3545,#ff7f7f);}
+.chart-container { width:100%; max-width:300px; height:250px; margin:auto;}
+.row-charts { display:flex; flex-wrap:wrap; justify-content:space-around;}
+.col-chart { flex:0 0 32%; margin-bottom:1rem; text-align:center;}
+.resumen-grafico { font-size:0.85rem; margin-top:0.25rem; min-height:50px;}
+.filtro-celeste { background-color:#cce5ff; border:1px solid #66b3ff; color:#000;}
+.filtro-celeste option { background-color:#cce5ff; color:#000;}
+@media(max-width:768px){ .col-chart{flex:0 0 100%;} }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-light sticky-top bg-light shadow">
+  <div class="container w-100">
+    <div class="navbar-title mx-auto font-weight-bold text-primary" style="font-size:1.3rem;">
+      DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 py-3">
+  <button class="btn btn-danger mb-3" onclick="window.location.replace('personal.html')">← Regresar a Personal</button>
+
+  <h2 id="tituloEmpleado" class="mb-1"></h2>
+  <p class="lead">Dashboard de gestiones y desempeño del personal seleccionado.</p>
+
+  <div class="d-flex justify-content-end align-items-center mb-3">
+    <select id="filtroMes" class="form-control w-auto filtro-celeste">
+      <option value="Todos">Todos los meses</option>
+    </select>
+  </div>
+
+  <div class="d-flex justify-content-around flex-wrap mb-3">
+    <div class="card-resumen bg-recuperado m-1 flex-fill">Recuperado: <span id="cardRecuperado">$0</span></div>
+    <div class="card-resumen bg-objetivo m-1 flex-fill">Objetivo: <span id="cardObjetivo">$0</span></div>
+    <div class="card-resumen bg-promedio m-1 flex-fill">Promedio Recuperación: <span id="cardPromedio">0%</span></div>
+    <div class="card-resumen bg-meta m-1 flex-fill" id="cardCumplimiento">Cumplimiento: ❌</div>
+  </div>
+
+  <div class="table-responsive mb-4">
+    <table class="table table-striped table-sm table-custom text-center">
+      <thead>
+        <tr>
+          <th>Mes</th>
+          <th>Créditos</th>
+          <th>Mora Recuperada</th>
+          <th>Objetivo Mora</th>
+          <th>Gestiones</th>
+          <th>Visitas Efectivas</th>
+          <th>Visitas No Efectivas</th>
+          <th>% Recuperación</th>
+        </tr>
+      </thead>
+      <tbody id="tablaGestiones"></tbody>
+      <tfoot id="totalesFila" class="text-center font-weight-bold"></tfoot>
+    </table>
+  </div>
+
+  <div class="row-charts">
+    <div class="col-chart"><canvas id="graficoTorta" class="chart-container"></canvas><div id="resumenTorta" class="resumen-grafico"></div></div>
+    <div class="col-chart"><canvas id="graficoBarras" class="chart-container"></canvas><div id="resumenBarras" class="resumen-grafico"></div></div>
+    <div class="col-chart"><canvas id="graficoLinea" class="chart-container"></canvas><div id="resumenLinea" class="resumen-grafico"></div></div>
+  </div>
+</div>
+
+<script>
+// Datos de ejemplo
+const datosEmpleados = [
+  {MES:"ENERO 2025", PERSONAL:"María López", CREDITOS:0, MORA_RECUPERADA:3000, OBJ_MORA:5000, GESTIONES:0, VISITAS_E:5, VISITAS_NE:2, "%_RECUPERACION":"60.00%"},
+  {MES:"FEBRERO 2025", PERSONAL:"María López", CREDITOS:0, MORA_RECUPERADA:4000, OBJ_MORA:5000, GESTIONES:0, VISITAS_E:6, VISITAS_NE:1, "%_RECUPERACION":"80.00%"},
+  {MES:"ENERO 2025", PERSONAL:"Ana Torres", CREDITOS:0, MORA_RECUPERADA:2500, OBJ_MORA:4000, GESTIONES:0, VISITAS_E:4, VISITAS_NE:1, "%_RECUPERACION":"62.50%"},
+  {MES:"FEBRERO 2025", PERSONAL:"Ana Torres", CREDITOS:0, MORA_RECUPERADA:3000, OBJ_MORA:4000, GESTIONES:0, VISITAS_E:5, VISITAS_NE:1, "%_RECUPERACION":"75.00%"}
+];
+
+// Capturar empleado
+const params = new URLSearchParams(window.location.search);
+const empleado = params.get('empleado');
+document.getElementById('tituloEmpleado').textContent = `Empleado: ${empleado || 'Sin Selección'}`;
+const gestiones = datosEmpleados.filter(d => d.PERSONAL===empleado);
+
+// Elementos
+const tbody = document.getElementById('tablaGestiones');
+const tfoot = document.getElementById('totalesFila');
+const filtroMes = document.getElementById('filtroMes');
+const cardRecuperado = document.getElementById('cardRecuperado');
+const cardObjetivo = document.getElementById('cardObjetivo');
+const cardPromedio = document.getElementById('cardPromedio');
+const cardCumplimiento = document.getElementById('cardCumplimiento');
+const resumenTorta = document.getElementById('resumenTorta');
+const resumenBarras = document.getElementById('resumenBarras');
+const resumenLinea = document.getElementById('resumenLinea');
+let chartTorta, chartBarras, chartLinea;
+
+if(gestiones.length>0){ [...new Set(gestiones.map(g=>g.MES))].forEach(m=>filtroMes.appendChild(new Option(m,m))); }
+else{ tbody.innerHTML='<tr><td colspan="8">No hay datos para este empleado.</td></tr>'; }
+
+function actualizarVista(){
+  if(gestiones.length===0) return;
+  const mesSel = filtroMes.value;
+  const gestionesFiltradas = mesSel==='Todos'? gestiones: gestiones.filter(g=>g.MES===mesSel);
+  tbody.innerHTML=''; tfoot.innerHTML='';
+  let totalCreditos=0, totalRecuperado=0, totalObjetivo=0, totalGestiones=0, totalVE=0, totalVNE=0;
+  gestionesFiltradas.forEach(item=>{
+    tbody.innerHTML+=`<tr>
+      <td>${item.MES}</td>
+      <td>${item.CREDITOS}</td>
+      <td>$${item.MORA_RECUPERADA.toLocaleString()}</td>
+      <td>$${item.OBJ_MORA.toLocaleString()}</td>
+      <td>${item.GESTIONES}</td>
+      <td>${item.VISITAS_E}</td>
+      <td>${item.VISITAS_NE}</td>
+      <td>${item["%_RECUPERACION"]}</td>
+    </tr>`;
+    totalCreditos+=item.CREDITOS; totalRecuperado+=item.MORA_RECUPERADA; totalObjetivo+=item.OBJ_MORA;
+    totalGestiones+=item.GESTIONES; totalVE+=item.VISITAS_E; totalVNE+=item.VISITAS_NE;
+  });
+  const porcentajeTotal = totalObjetivo? (totalRecuperado/totalObjetivo)*100:0;
+  tfoot.innerHTML=`<tr>
+    <td>TOTAL</td><td>${totalCreditos}</td><td>$${totalRecuperado.toLocaleString()}</td><td>$${totalObjetivo.toLocaleString()}</td>
+    <td>${totalGestiones}</td><td>${totalVE}</td><td>${totalVNE}</td><td>${porcentajeTotal.toFixed(2)}%</td>
+  </tr>`;
+  cardRecuperado.textContent=`$${totalRecuperado.toLocaleString()}`;
+  cardObjetivo.textContent=`$${totalObjetivo.toLocaleString()}`;
+  const promedio = gestionesFiltradas.reduce((a,b)=>a+parseFloat(b["%_RECUPERACION"]),0)/gestionesFiltradas.length;
+  cardPromedio.textContent=`${promedio.toFixed(2)}%`;
+  cardCumplimiento.textContent = porcentajeTotal>=85? "Cumplimiento: ✅":"Cumplimiento: ❌";
+  cardCumplimiento.className = porcentajeTotal>=85? "card-resumen bg-recuperado m-1 flex-fill":"card-resumen bg-meta m-1 flex-fill";
+  actualizarGraficos(gestionesFiltradas,totalRecuperado,totalObjetivo,porcentajeTotal);
+}
+
+function actualizarGraficos(gestionesFiltradas,totalRecuperado,totalObjetivo,porcentajeTotal){
+  if(chartTorta) chartTorta.destroy(); if(chartBarras) chartBarras.destroy(); if(chartLinea) chartLinea.destroy();
+  chartTorta=new Chart(document.getElementById('graficoTorta'),{type:'doughnut',data:{labels:['Recuperado','Pendiente'],datasets:[{data:[totalRecuperado,totalObjetivo-totalRecuperado], backgroundColor:['#28a745','#dc3545']}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:{formatter:v=>`$${v.toLocaleString()}`,color:'#fff',font:{weight:'bold',size:12}}}},plugins:[ChartDataLabels]});
+  resumenTorta.innerHTML = totalObjetivo? `<span class="${porcentajeTotal>=85?'resumen-exito':'resumen-fallo'}">Monto recuperado: $${totalRecuperado.toLocaleString()} de $${totalObjetivo.toLocaleString()} (${porcentajeTotal.toFixed(2)}%), pendiente $${(totalObjetivo-totalRecuperado).toLocaleString()}.</span>`:'No hay datos.';
+  chartBarras=new Chart(document.getElementById('graficoBarras'),{type:'bar',data:{labels:gestionesFiltradas.map(g=>g.MES),datasets:[{label:'Mora Recuperada',data:gestionesFiltradas.map(g=>g.MORA_RECUPERADA),backgroundColor:'#007bff'}]},options:{responsive:true,plugins:{legend:{display:false}}}});
+  const maxMes = gestionesFiltradas.length? gestionesFiltradas.reduce((a,b)=>a.MORA_RECUPERADA>b.MORA_RECUPERADA?a:b).MES:'';
+  const maxMonto = gestionesFiltradas.length? Math.max(...gestionesFiltradas.map(g=>g.MORA_RECUPERADA)):0;
+  resumenBarras.innerHTML = gestionesFiltradas.length? `Total recuperado: $${totalRecuperado.toLocaleString()}. Mes con mayor recuperación: ${maxMes} ($${maxMonto.toLocaleString()}).`:'No hay datos.';
+  chartLinea=new Chart(document.getElementById('graficoLinea'),{type:'line',data:{labels:gestionesFiltradas.map(g=>g.MES),datasets:[{label:'% Recuperación',data:gestionesFiltradas.map(g=>parseFloat(g["%_RECUPERACION"])),borderColor:'#ffc107',backgroundColor:'rgba(255,193,7,0.2)',fill:true,tension:0.3}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+  const promedioPorcentaje = gestionesFiltradas.reduce((a,b)=>a+parseFloat(b["%_RECUPERACION"]),0)/gestionesFiltradas.length;
+  resumenLinea.innerHTML = gestionesFiltradas.length? `Porcentaje promedio de recuperación: ${promedioPorcentaje.toFixed(2)}%. Evolución mensual mostrada en el gráfico.`:'No hay datos.';
+}
+
+actualizarVista();
+filtroMes.addEventListener('change', actualizarVista);
+</script>
+</body>
+</html>

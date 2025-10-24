@@ -1,0 +1,20 @@
+[
+  {
+    "marca_temporal": "2025-10-01 10:00",
+    "zona": "Colón",
+    "numero_de_tarjeta": "1001",
+    "nombre_del_cliente": "Juan Perez",
+    "direccion": "Calle Falsa 123",
+    "telefono": "12345678",
+    "producto": "Producto A"
+  },
+  {
+    "marca_temporal": "2025-10-02 09:30",
+    "zona": "Tepecoyo",
+    "numero_de_tarjeta": "1002",
+    "nombre_del_cliente": "Ana Gomez",
+    "direccion": "Avenida Siempre Viva 456",
+    "telefono": "87654321",
+    "producto": "Producto B"
+  }
+]

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Gestiones del Gestor</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { background:#f8f9fa; font-family:Inter, system-ui; }
+h3 { font-weight:700; color:#243044; }
+.table th, .table td { text-align:center; vertical-align:middle; font-size:0.9rem; }
+.table thead th { background-color:#0d6efd; color:white; }
+.container { margin-top:1.5rem; }
+.loading { text-align:center; padding:2rem; color:#6c757d; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <h3>Gestiones — <small id="empleadoNombre">Empleado</small></h3>
+      <span class="small text-muted">Datos cargados automáticamente desde Google Sheets</span>
+    </div>
+    <div>
+      <button id="btnBack" class="btn btn-outline-secondary btn-sm">← Volver</button>
+    </div>
+  </div>
+
+  <div id="alertBox" class="mb-3"></div>
+
+  <div class="table-responsive mt-3">
+    <table class="table table-striped table-bordered table-sm">
+      <thead>
+        <tr>
+          <th>MES</th>
+          <th>GESTOR</th>
+          <th>CLIENTE</th>
+          <th>DUI</th>
+          <th>TELEFONO</th>
+          <th>DIRECCION</th>
+          <th>FECHA DE GESTION</th>
+          <th>GESTION</th>
+          <th>COMENTARIO</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyGestiones">
+        <tr><td colspan="9" class="loading">Cargando gestiones...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// --- CONFIGURACIÓN ---
+const csvUrlRaw = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWc7tNf1MsbdXNCf7_To0EUb25mXuEE-SnH4wg3_cd7Xa_-kYQNJXOvS6vAbzr9EGNOCyI8bw4KIwE/pub?gid=174846463&single=true&output=csv";
+const proxyUrl = "https://api.codetabs.com/v1/proxy?quest=";
+const csvUrl = proxyUrl + encodeURIComponent(csvUrlRaw);
+
+// Nombre del empleado desde URL
+const params = new URLSearchParams(window.location.search);
+const empleado = params.get('empleado') ? decodeURIComponent(params.get('empleado')) : "";
+document.getElementById('empleadoNombre').textContent = empleado || "No definido";
+
+// Botón volver
+document.getElementById('btnBack').addEventListener('click', () => window.history.back());
+
+// Alertas
+function showAlert(msg, type='danger'){
+  const box = document.getElementById('alertBox');
+  box.style.display = 'block';
+  box.innerHTML = `<div class="alert alert-${type}" role="alert">${msg}</div>`;
+}
+
+// Normalización para nombres
+function normalize(s){
+  return s ? s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase() : '';
+}
+
+// Parse CSV simple
+function parseCSV(text){
+  const lines = text.trim().split("\n");
+  return lines.map(line => line.split(",").map(cell => cell.replace(/^"|"$/g,'').trim()));
+}
+
+// Convertir CSV a objetos
+function csvRowsToObjects(rows){
+  if (!rows.length) return [];
+  const headers = rows[0];
+  return rows.slice(1).map(r=>{
+    const obj = {};
+    headers.forEach((h,i)=> obj[h.trim()] = r[i] ? r[i].trim() : "");
+    return obj;
+  });
+}
+
+// Cargar CSV
+async function fetchCSV(){
+  const res = await fetch(csvUrl);
+  if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+  return await res.text();
+}
+
+// Cargar gestiones
+async function cargarGestiones(){
+  const tbody = document.getElementById('tbodyGestiones');
+  tbody.innerHTML = `<tr><td colspan="9" class="loading">Cargando gestiones...</td></tr>`;
+  try {
+    const csvText = await fetchCSV();
+    const rows = parseCSV(csvText);
+    const objs = csvRowsToObjects(rows);
+
+    if (!objs.length){
+      tbody.innerHTML = `<tr><td colspan="9">No hay gestiones registradas.</td></tr>`;
+      return;
+    }
+
+    // Filtrar por empleado
+    const registrosEmpleado = objs.filter(r => normalize(r["GESTOR"]) === normalize(empleado));
+
+    tbody.innerHTML = '';
+    if (!registrosEmpleado.length){
+      tbody.innerHTML = `<tr><td colspan="9">No hay gestiones registradas para este empleado.</td></tr>`;
+      return;
+    }
+
+    registrosEmpleado.forEach(r=>{
+      const mes = r["MES"] || '-';
+      const gestor = r["GESTOR"] || '-';
+      const cliente = r["CLIENTE"] || '-';
+      const dui = r["DUI"] || '-';
+      const telefono = r["TELEFONO"] || '-';
+      const direccion = r["DIRECCION"] || '-';
+      const fechaGestion = r["FECHA DE GESTION"] || '-';
+      const gestion = r["GESTION"] || '-';
+      const comentario = r["COMENTARIO"] || '-';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${mes}</td><td>${gestor}</td><td>${cliente}</td><td>${dui}</td><td>${telefono}</td><td>${direccion}</td><td>${fechaGestion}</td><td>${gestion}</td><td>${comentario}</td>`;
+      tbody.appendChild(tr);
+    });
+
+  } catch(err){
+    console.error(err);
+    showAlert(`No se pudieron cargar las gestiones: ${err.message}`);
+    tbody.innerHTML = `<tr><td colspan="9" class="text-danger">Error cargando datos.</td></tr>`;
+  }
+}
+
+// Iniciar
+cargarGestiones();
+</script>
+</body>
+</html>
