@@ -7,10 +7,12 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="css/styles.css" rel="stylesheet">
 
   <style>
-    body { background-color:#eef2f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { 
+      background-color:#eef2f6; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    }
 
     /* Login */
     #loginBox {
@@ -23,31 +25,98 @@
       z-index:1000;
     }
     #loginBox .login-inner {
-      background:#fff; padding:2rem; border-radius:10px;
-      box-shadow:0 4px 10px rgba(0,0,0,0.2); text-align:center;
+      background:#fff; 
+      padding:2rem; 
+      border-radius:10px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.2); 
+      text-align:center;
+      width: 90%;
+      max-width: 400px;
     }
-    #loginBox input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
-    #loginBox button { padding:10px 20px; border:none; border-radius:5px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
+    #loginBox input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; font-size:1rem;}
+    #loginBox button { padding:10px 20px; border:none; border-radius:5px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; font-size:1rem;}
     #loginBox button:hover { background:#1d4ed8; }
 
-    .navbar-title { width:100%; text-align:center; font-weight:700; color:#1f2937; font-size:1.3rem; }
-    .main-content-center { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; margin-top:3rem; }
+    .navbar-title { 
+      font-weight:700; color:#1f2937; font-size:1.2rem; text-align:center; 
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Sidebar */
+    #sidebarMenu {
+      background: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding-top: 1rem;
+    }
+    #sidebarMenu .nav-link {
+      font-size: 0.95rem;
+      padding: 0.6rem 1rem;
+    }
+
+    /* Main content */
+    main {
+      padding: 1rem;
+    }
+
+    .main-content-center h1 {
+      font-size: 1.8rem;
+    }
+    .main-content-center p {
+      font-size: 1rem;
+    }
+
     .main-buttons a { 
-      margin:0.5rem; padding:0.9rem 1.3rem; border-radius:0.5rem; 
+      margin:0.4rem; padding:0.7rem 1rem; border-radius:0.4rem; 
       background-color:#2563eb; color:#fff; font-weight:600; text-decoration:none; transition:0.3s; 
+      font-size:0.9rem;
     }
     .main-buttons a:hover { background-color:#1d4ed8; text-decoration:none; }
-    .pb-2.mb-4.border-bottom h1 { font-size:2.5rem; color:#1e3a8a; }
-    .pb-2.mb-4.border-bottom p { font-size:1.3rem; color:#4b5563; }
+
+    #avisoCumple {
+      display:none;
+      background: linear-gradient(135deg, #fff3cd, #ffe8a1);
+      color:#5a4100;
+      padding:15px;
+      border-radius:12px;
+      border:2px solid #ffcc00;
+      text-align:center;
+      font-weight:600;
+      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      animation: pulse 1.5s infinite alternate;
+      margin-top: 15px;
+    }
+    #avisoCumple h4 { font-weight:700; margin-bottom:8px; font-size:1.2rem; }
+    #avisoCumple p { font-size:0.95rem; margin:0; }
 
     @keyframes pulse {
       from { box-shadow:0 0 5px rgba(255,204,0,0.5); }
       to { box-shadow:0 0 20px rgba(255,204,0,1); }
     }
 
-    @media (max-width:768px) {
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      #sidebarMenu {
+        min-height: auto;
+        position: relative;
+        border-right: none;
+      }
+      .row > main {
+        margin-top: 1rem;
+      }
+    }
+
+    @media (max-width: 768px) {
       .main-buttons { flex-direction:column; }
-      .main-buttons a { width:80%; margin:auto 0.2rem; }
+      .main-buttons a { width: 90%; margin:auto 0.2rem; font-size:0.85rem; }
+      .main-content-center h1 { font-size:1.5rem; }
+      .main-content-center p { font-size:0.9rem; }
+    }
+
+    @media (max-width: 576px) {
+      .main-buttons a { width: 95%; padding:0.6rem 0.8rem; font-size:0.8rem; }
+      .main-content-center h1 { font-size:1.3rem; }
+      .main-content-center p { font-size:0.85rem; }
     }
   </style>
 </head>
@@ -66,13 +135,8 @@
 
 <!-- Navbar -->
 <nav class="navbar navbar-light sticky-top bg-light shadow">
-  <div class="container w-100 d-flex justify-content-between align-items-center">
-    <!-- Botón hamburguesa en móvil -->
-    <button class="navbar-toggler d-md-none" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="navbar-title mx-auto font-weight-bold text-primary" style="font-size:1.3rem;">
+  <div class="container-fluid d-flex justify-content-center">
+    <div class="navbar-title">
       DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
     </div>
   </div>
@@ -80,40 +144,26 @@
 
 <div class="container-fluid">
   <div class="row">
-    <!-- Sidebar -->
-    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar shadow-sm collapse">
-      <div class="sidebar-sticky pt-3">
-        <ul class="nav flex-column">
-          <li class="nav-item"><a class="nav-link active" href="./index.html">INICIO</a></li>
-          <li class="nav-item"><a class="nav-link" href="./gestores.html">GESTORES DE COBRO</a></li>
-          <li class="nav-item"><a class="nav-link" href="./personal.html">PERSONAL DE CAMPO</a></li>
-          <li class="nav-item"><a class="nav-link" href="./reportes.html">REPORTES</a></li>
-          <li class="nav-item"><a class="nav-link" href="./empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
-          <li class="nav-item"><a class="nav-link" href="./mora.html">MORA</a></li>
-        </ul>
-      </div>
+    <!-- Sidebar siempre visible -->
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar shadow-sm">
+      <ul class="nav flex-column">
+        <li class="nav-item"><a class="nav-link active" href="./index.html">INICIO</a></li>
+        <li class="nav-item"><a class="nav-link" href="./gestores.html">GESTORES DE COBRO</a></li>
+        <li class="nav-item"><a class="nav-link" href="./personal.html">PERSONAL DE CAMPO</a></li>
+        <li class="nav-item"><a class="nav-link" href="./reportes.html">REPORTES</a></li>
+        <li class="nav-item"><a class="nav-link" href="./empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
+        <li class="nav-item"><a class="nav-link" href="./mora.html">MORA</a></li>
+      </ul>
     </nav>
 
     <!-- Main content -->
-    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-2">
 
       <!-- Aviso de cumpleaños -->
-      <div id="avisoCumple" style="
-        display:none;
-        background: linear-gradient(135deg, #fff3cd, #ffe8a1);
-        color:#5a4100;
-        padding:20px;
-        border-radius:15px;
-        border:2px solid #ffcc00;
-        text-align:center;
-        font-weight:600;
-        box-shadow:0 4px 10px rgba(0,0,0,0.15);
-        animation: pulse 1.5s infinite alternate;
-        margin-top: 20px;
-      ">
-        <h4 style="font-weight:700; margin-bottom:10px;">🎉 ¡Feliz Cumpleaños! 🎉</h4>
-        <p id="textoCumple" style="font-size:1.1rem;"></p>
-        <p style="margin-top:10px;">🎈 Que este día esté lleno de alegría y buenos momentos. 🎈</p>
+      <div id="avisoCumple">
+        <h4>🎉 ¡Feliz Cumpleaños! 🎉</h4>
+        <p id="textoCumple"></p>
+        <p>🎈 Que este día esté lleno de alegría y buenos momentos. 🎈</p>
       </div>
 
       <div class="main-content-center">
