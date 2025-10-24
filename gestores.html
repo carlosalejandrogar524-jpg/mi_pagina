@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Gestores de Cobro | Sucursal Amaya</title>
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="css/styles.css" rel="stylesheet">
+
+<style>
+/* Ajuste de títulos */
+.titulo-gestores { padding-top: 0.1rem; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+/* Tabla más compacta */
+table.table-custom th, table.table-custom td { font-size: 0.85rem; padding: 0.4rem; }
+/* Subtítulo más pequeño */
+.lead { font-size: 0.9rem; }
+/* Contenedor título centrado */
+.titulo-texto { margin-bottom: 1rem; }
+/* Estilo para que el nombre luzca como enlace */
+.empleado-link {
+  cursor: pointer;
+  color: #0d6efd; /* Azul Bootstrap */
+  text-decoration: underline;
+}
+.empleado-link:hover {
+  color: #0a58ca;
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-light sticky-top bg-light shadow">
+  <div class="container w-100">
+    <div class="navbar-title mx-auto font-weight-bold text-primary" style="font-size:1.3rem;">
+      DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+      <div class="sidebar-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link" href="index.html">INICIO</a></li>
+          <li class="nav-item"><a class="nav-link active" href="gestores.html">GESTORES DE COBRO</a></li>
+          <li class="nav-item"><a class="nav-link" href="personal.html">PERSONAL DE CAMPO</a></li>
+          <li class="nav-item"><a class="nav-link" href="reportes.html">REPORTES</a></li>
+          <li class="nav-item"><a class="nav-link" href="empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+
+      <!-- Título -->
+      <div class="titulo-texto">
+        <h1 class="h2">Gestores de Cobro</h1>
+        <p class="lead">Datos y desempeño del personal en gestión de cobros.</p>
+      </div>
+
+      <!-- Tabla de Gestores -->
+      <div class="table-responsive">
+        <table class="table table-striped table-sm table-custom">
+          <thead class="text-center">
+            <tr>
+              <th>Nombre</th>
+              <th>Cargo</th>
+              <th>DUI</th>
+              <th>Número de Teléfono</th>
+              <th>Sucursal</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody class="text-center"></tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+// Datos de empleados
+const data = [
+  {NOMBRE:"Juan Pérez", CARGO:"Cobrador", DUI:"01234567-8", TELEFONO:"+503 1234-5678", SUCURSAL:"Amaya", ESTADO:"Activo"},
+  {NOMBRE:"Carlos Ruiz", CARGO:"Cobrador", DUI:"87654321-0", TELEFONO:"+503 8765-4321", SUCURSAL:"Amaya", ESTADO:"Activo"},
+  {NOMBRE:"Ana Torres", CARGO:"Cobrador", DUI:"12345678-9", TELEFONO:"+503 2345-6789", SUCURSAL:"Amaya", ESTADO:"Inactivo"}
+];
+
+const tbody = document.querySelector('tbody');
+
+// Función para llenar tabla y eliminar duplicados
+function actualizarTabla() {
+  tbody.innerHTML = '';
+
+  const uniqueData = [];
+  const nombresVistos = new Set();
+
+  data.forEach(item => {
+    if (!nombresVistos.has(item.NOMBRE)) {
+      uniqueData.push(item);
+      nombresVistos.add(item.NOMBRE);
+    }
+  });
+
+  uniqueData.forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="empleado-link">${item.NOMBRE}</td>
+      <td>${item.CARGO}</td>
+      <td>${item.DUI}</td>
+      <td>${item.TELEFONO}</td>
+      <td>${item.SUCURSAL}</td>
+      <td>${item.ESTADO}</td>
+    `;
+    // Redirigir al hacer clic en el nombre
+    row.querySelector('td').addEventListener('click', () => {
+      window.location.href = `detalle_empleado.html?empleado=${encodeURIComponent(item.NOMBRE)}`;
+    });
+    tbody.appendChild(row);
+  });
+}
+
+// Inicializar tabla
+actualizarTabla();
+</script>
+
+</body>
+</html>

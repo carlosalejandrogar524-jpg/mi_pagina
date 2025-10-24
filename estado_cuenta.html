@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estado de Cuenta</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+  background: #f8fafc;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1cm;
+  width: 21.59cm;
+  height: 27.94cm;
+  margin: auto;
+}
+.page {
+  background: white;
+  padding: 2cm;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+h1 {
+  color: #1e3a8a;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.header {
+  border-bottom: 3px solid #1e3a8a;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+}
+.info p, .resumen p, .historial p {
+  margin: 0.3rem 0;
+  font-size: 0.95rem;
+}
+.info strong, .resumen strong, .historial strong {
+  color: #1e3a8a;
+  display: inline-block;
+  width: 180px;
+}
+.section-title {
+  color: #1e3a8a;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  border-bottom: 2px solid #1e3a8a;
+  padding-bottom: 0.3rem;
+}
+.resumen, .historial {
+  background: #e0f2fe;
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+}
+.historial p {
+  margin-bottom: 0.5rem;
+}
+.historial hr {
+  border: 1px solid #93c5fd;
+  margin: 0.5rem 0;
+}
+.no-print {
+  text-align: center;
+  margin-top: 2rem;
+}
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="header">
+    <h1>💳 Estado de Cuenta - Sucursal Amaya</h1>
+  </div>
+
+  <!-- ENCABEZADO DEL CLIENTE -->
+  <div class="info">
+    <p><strong>Número de Tarjeta:</strong> <span id="tarjeta"></span></p>
+    <p><strong>Nombre del Cliente:</strong> <span id="nombre"></span></p>
+    <p><strong>Teléfono:</strong> <span id="telefono"></span></p>
+    <p><strong>Dirección:</strong> <span id="direccion"></span></p>
+  </div>
+
+  <hr>
+
+  <!-- RESUMEN DE CUENTA -->
+  <h2 class="section-title">Resumen de Cuenta</h2>
+  <div class="resumen">
+    <p>📅 <strong>Días Pendientes:</strong> <span id="diaspendientes"></span></p>
+    <p>💰 <strong>Deuda Total:</strong> $<span id="deudatotal"></span></p>
+    <p>💸 <strong>Recuperado:</strong> $<span id="recuperado"></span></p>
+    <p>📌 <strong>Monto Pendiente:</strong> $<span id="pendiente"></span></p>
+  </div>
+
+  <!-- HISTORIAL DE PAGOS -->
+  <h2 class="section-title">Historial de Pagos</h2>
+  <div id="historialPagos" class="historial"></div>
+
+  <div class="no-print">
+    <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Estado de Cuenta</button>
+    <a href="mora.html" class="btn btn-secondary ml-2">⬅ Volver</a>
+  </div>
+</div>
+
+<script>
+const SHEET_URL = "https://api.codetabs.com/v1/proxy?quest=" +
+  encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vRbmVB9wmGK70VAeV9IfsKPbrtHSSGkpoyudYQkqaGVjBUxso-c5MmtBV6j-0qUxbrr4ws6P3GsSklK/pub?gid=1512254828&single=true&output=csv");
+
+let clientes = [];
+
+// Normaliza headers: quita acentos, espacios y pone en minúscula
+function normalizeHeader(header) {
+  return header
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '');
+}
+
+// Parsear CSV a objetos con headers normalizados
+function parseCSV(text) {
+  const rows = text.trim().split(/\r?\n/).map(r => r.split(','));
+  const headers = rows[0].map(h => normalizeHeader(h));
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (r[i] || '').trim());
+    return obj;
+  });
+}
+
+// Cargar datos desde Google Sheet
+async function cargarDatos() {
+  const res = await fetch(SHEET_URL);
+  const text = await res.text();
+  clientes = parseCSV(text);
+  mostrarEstado();
+}
+
+// Mostrar estado de cuenta
+function mostrarEstado() {
+  const params = new URLSearchParams(window.location.search);
+  const tarjeta = (params.get("tarjeta") || "").trim().toLowerCase();
+
+  if (!tarjeta) return alert("No se proporcionó número de tarjeta.");
+
+  const registros = clientes.filter(c => {
+    const numero = (c['numerodetarjeta'] || '').replace(/\s+/g, '').toLowerCase();
+    return numero === tarjeta.replace(/\s+/g, '');
+  });
+
+  if (registros.length === 0) return alert("Cliente no encontrado en el archivo.");
+
+  const cliente = registros[0];
+
+  // Encabezado
+  document.getElementById("tarjeta").textContent = cliente["numerodetarjeta"] || "N/A";
+  document.getElementById("nombre").textContent = cliente["nombrecliente"] || cliente["nombredelcliente"] || "N/A";
+  document.getElementById("telefono").textContent = cliente["telefono"] || cliente["teléfono"] || "N/A";
+  document.getElementById("direccion").textContent = cliente["direccion"] || cliente["dirección"] || "N/A";
+
+  // Resumen de cuenta
+  const diasPendientes = parseInt(cliente["diaspendientes"] || 0);
+
+  // Deuda Total por cliente, limpiando cualquier carácter que no sea número o punto
+  const deudaTotal = parseFloat((cliente["deudatotal"] || "0").replace(/[^0-9.-]+/g,"")) || 0;
+
+  // Total recuperado sumando todos los registros de este cliente
+  let totalRecuperado = 0;
+  registros.forEach(r => {
+    totalRecuperado += parseFloat((r["recuperado"] || "0").replace(/[^0-9.-]+/g,"")) || 0;
+  });
+
+  // Monto Pendiente = Deuda Total - Total Recuperado
+  const pendiente = (deudaTotal - totalRecuperado).toFixed(2);
+
+  document.getElementById("diaspendientes").textContent = diasPendientes;
+  document.getElementById("deudatotal").textContent = deudaTotal.toFixed(2);
+  document.getElementById("recuperado").textContent = totalRecuperado.toFixed(2);
+  document.getElementById("pendiente").textContent = pendiente;
+
+  // Historial de pagos
+  const historial = document.getElementById("historialPagos");
+  historial.innerHTML = "";
+
+  registros.forEach(r => {
+    const recuperado = parseFloat((r["recuperado"] || "0").replace(/[^0-9.-]+/g,"")) || 0;
+
+    const pagoHtml = `
+      <p>
+        <strong>Fecha de Gestión:</strong> ${r["fechadegestion"] || "N/A"}<br>
+        <strong>Producto:</strong> ${r["producto"] || "N/A"}<br>
+        <strong>Recuperado:</strong> $${recuperado.toFixed(2)}
+      </p>
+      <hr>
+    `;
+    historial.insertAdjacentHTML("beforeend", pagoHtml);
+  });
+}
+
+cargarDatos();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pagos Recuperados — Detalle</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  body { background:#f8f9fa; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; color:#243044; }
+  .container { margin-top:1.25rem; }
+  .table th, .table td { text-align:center; vertical-align:middle; font-size:0.95rem; }
+  .small-muted { color:#666; display:block; margin-bottom:.6rem; }
+  .totales { font-weight:800; background:#f1f3f5; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <h4 class="mb-0 text-success">Pagos Recuperados — <small id="empleadoNombre">Cargando...</small></h4>
+      <span class="small-muted">Datos cargados automáticamente desde Google Sheets</span>
+    </div>
+    <div>
+      <button id="btnBack" class="btn btn-outline-secondary btn-sm">← Volver</button>
+    </div>
+  </div>
+
+  <div id="alertBox" style="display:none" class="mb-3"></div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead class="thead-dark">
+        <tr>
+          <th>MES</th>
+          <th>GESTOR</th>
+          <th>CLIENTE</th>
+          <th>DUI</th>
+          <th>TELÉFONO</th>
+          <th>DEUDA TOTAL</th>
+          <th>FECHA DE PAGO</th>
+          <th>RECUPERADO</th>
+          <th>MONTO PENDIENTE</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyRecuperado">
+        <tr><td colspan="9">Cargando pagos...</td></tr>
+      </tbody>
+      <tfoot id="tfootRecuperado"></tfoot>
+    </table>
+  </div>
+</div>
+
+<script>
+// ---------------- CONFIG ----------------
+const urlParams = new URLSearchParams(window.location.search);
+const empleado = urlParams.get('empleado') ? decodeURIComponent(urlParams.get('empleado')) : "";
+document.getElementById('empleadoNombre').textContent = empleado || "No definido";
+
+document.getElementById('btnBack').addEventListener('click', ()=> history.back());
+
+const csvRaw = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTh4nQC1nPAHgWvJ0SIlL5AhnV4d6v6htBlGQnCJsLvLeC1IsfYDglzJ1JyVKvRAJ6apOEocWmvpsKo/pub?gid=1552374160&single=true&output=csv";
+const proxy = "https://api.codetabs.com/v1/proxy?quest=";
+const csvUrl = proxy + encodeURIComponent(csvRaw);
+
+// ---------------- UTIL ----------------
+function showAlert(msg, type='danger'){
+  const box = document.getElementById('alertBox');
+  box.style.display = 'block';
+  box.innerHTML = `<div class="alert alert-${type}" role="alert">${msg}</div>`;
+}
+
+function csvParse(text){
+  const rows = [];
+  let cur = '', row = [], inQuotes = false;
+  for (let i=0;i<text.length;i++){
+    const ch = text[i], next = text[i+1];
+    if (ch === '"'){
+      if (inQuotes && next === '"') { cur += '"'; i++; } 
+      else { inQuotes = !inQuotes; }
+      continue;
+    }
+    if (ch === ',' && !inQuotes){ row.push(cur); cur = ''; continue; }
+    if ((ch === '\n' || ch === '\r') && !inQuotes){
+      if (cur !== '' || row.length > 0){ row.push(cur); rows.push(row); row = []; cur = ''; }
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur !== '' || row.length > 0) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.length>1 || (r.length===1 && r[0].trim()!==""));
+}
+
+function rowsToObjects(rows){
+  if (!rows || rows.length === 0) return [];
+  const headers = rows[0].map(h => h ? h.trim() : "");
+  const objects = rows.slice(1).map(r => {
+    const o = {};
+    headers.forEach((h,i) => o[h] = (r[i] !== undefined ? r[i].trim() : ""));
+    return o;
+  });
+  return objects;
+}
+
+function normalize(s){
+  return s ? s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase() : '';
+}
+
+function getField(row, ...names){
+  const keys = Object.keys(row);
+  for (const wanted of names){
+    const wantNorm = normalize(wanted);
+    for (const k of keys){
+      if (normalize(k) === wantNorm) return row[k];
+    }
+  }
+  for (const wanted of names){
+    const wantNorm = normalize(wanted);
+    for (const k of keys){
+      if (normalize(k).includes(wantNorm) || wantNorm.includes(normalize(k))) return row[k];
+    }
+  }
+  return "";
+}
+
+function toNumber(v){
+  if (v === null || v === undefined) return 0;
+  let s = v.toString().trim().replace(/\u00A0/g,'').replace(/\$/g,'').replace(/ /g,'');
+  if (s.indexOf('.') !== -1 && s.indexOf(',') !== -1){
+    if (s.lastIndexOf('.') > s.lastIndexOf(',')){
+      s = s.replace(/,/g,''); 
+    } else {
+      s = s.replace(/\./g,'').replace(/,/g,'.');
+    }
+  } else {
+    if (s.indexOf(',') !== -1 && s.indexOf('.') === -1) s = s.replace(/\./g,'').replace(/,/g,'.');
+    s = s.replace(/,/g,'').replace(/\s/g,'');
+  }
+  s = s.replace(/[^0-9.\-]/g,'');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+// ---------------- LOAD ----------------
+async function cargarRecuperados(){
+  const tbody = document.getElementById('tbodyRecuperado');
+  const tfoot = document.getElementById('tfootRecuperado');
+  tbody.innerHTML = `<tr><td colspan="9">Cargando pagos...</td></tr>`;
+  tfoot.innerHTML = '';
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = csvParse(text);
+    const objs = rowsToObjects(rows);
+
+    if (!objs.length){
+      tbody.innerHTML = `<tr><td colspan="9">No hay registros.</td></tr>`;
+      return;
+    }
+
+    const sample = objs[0];
+    const gestorKey = Object.keys(sample).find(k => normalize(k).includes('gestor') || normalize(k).includes('empleado')) || null;
+
+    const filtrados = gestorKey && empleado
+      ? objs.filter(r => normalize(getField(r, gestorKey)) === normalize(empleado))
+      : objs;
+
+    if (!filtrados.length){
+      tbody.innerHTML = `<tr><td colspan="9">No hay pagos registrados para ${empleado || 'este gestor'}.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = '';
+    let sumaRecuperado = 0;
+    let sumaPendiente = 0;
+
+    filtrados.forEach(r => {
+      const mes = getField(r, 'MES', 'Mes', 'mes') || '-';
+      const gestor = getField(r, 'GESTOR', 'Gestor', 'Empleado') || '-';
+      const cliente = getField(r, 'CLIENTE', 'Cliente', 'Nombre Cliente') || '-';
+      const dui = getField(r, 'DUI', 'Documento') || getField(r,'IDENTIFICACION') || '-';
+      const telefono = getField(r, 'TELEFONO', 'Telefono', 'TEL') || '-';
+      const deuda = toNumber(getField(r, 'DEUDA TOTAL', 'DEUDA', 'TOTAL DEUDA', 'TOTAL PENDIENTE') || '');
+      const fechaPago = getField(r, 'FECHA DE PAGO', 'FECHA PAGO', 'FECHA', 'FECHA_DE_PAGO') || getField(r,'FECHA') || '-';
+
+      // <-- CAMBIO: Solo columna RECUPERADO
+      const recuperado = toNumber(getField(r, 'RECUPERADO') || '');
+      sumaRecuperado += recuperado;
+
+      const montoPendiente = toNumber(getField(r, 'MONTO PENDIENTE', 'MONTO PEND', 'PENDIENTE', 'SALDO', 'TOTAL PENDIENTE') || '');
+      sumaPendiente += montoPendiente;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${mes}</td>
+        <td>${gestor}</td>
+        <td>${cliente}</td>
+        <td>${dui}</td>
+        <td>${telefono}</td>
+        <td>${deuda !== 0 ? money(deuda) : '-'}</td>
+        <td>${fechaPago}</td>
+        <td>${recuperado !== 0 ? money(recuperado) : '-'}</td>
+        <td>${montoPendiente !== 0 ? money(montoPendiente) : '-'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tfoot.innerHTML = `
+      <tr class="totales">
+        <td colspan="7" style="text-align:right">TOTALES:</td>
+        <td>${money(sumaRecuperado)}</td>
+        <td>${money(sumaPendiente)}</td>
+      </tr>
+    `;
+
+    document.getElementById('alertBox').style.display = 'none';
+
+  } catch (err){
+    console.error(err);
+    showAlert("Error al cargar los pagos: " + err.message);
+    tbody.innerHTML = `<tr><td colspan="9" class="text-danger">Error cargando datos.</td></tr>`;
+  }
+}
+
+function money(v){ return `$${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`; }
+
+cargarRecuperados();
+setInterval(cargarRecuperados, 60000);
+</script>
+</body>
+</html>

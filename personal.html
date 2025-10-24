@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Personal de Campo | Sucursal Amaya</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="css/styles.css" rel="stylesheet">
+
+<style>
+/* Ajuste de títulos y filtros */
+.titulo-filtros { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem; }
+.titulo-texto { flex:2; min-width:250px; }
+.filtros { flex:1; display:flex; gap:0.5rem; min-width:250px; }
+table.table-custom th, table.table-custom td { font-size:0.85rem; padding:0.4rem; }
+select.form-control { font-size:0.85rem; padding:0.25rem 0.5rem; text-transform:uppercase; }
+.lead { font-size:0.9rem; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-light sticky-top bg-light shadow">
+  <div class="container w-100">
+    <div class="navbar-title mx-auto font-weight-bold text-primary" style="font-size:1.3rem;">
+      DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+      <div class="sidebar-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link" href="index.html">INICIO</a></li>
+          <li class="nav-item"><a class="nav-link" href="gestores.html">GESTORES DE COBRO</a></li>
+          <li class="nav-item"><a class="nav-link active" href="personal.html">PERSONAL DE CAMPO</a></li>
+          <li class="nav-item"><a class="nav-link" href="reportes.html">REPORTES</a></li>
+          <li class="nav-item"><a class="nav-link" href="empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+      <div class="titulo-filtros">
+        <div class="titulo-texto">
+          <h1 class="h2">Personal de Campo</h1>
+          <p class="lead">Datos y desempeño del personal en visitas a clientes.</p>
+        </div>
+        <div class="filtros">
+          <select id="filterMes" class="form-control">
+            <option value="Todos">MES</option>
+          </select>
+          <select id="filterPersonal" class="form-control">
+            <option value="Todos">EMPLEADOS</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-sm table-custom">
+          <thead class="text-center">
+            <tr>
+              <th>Mes</th>
+              <th>Personal</th>
+              <th>Función</th>
+              <th>Créditos</th>
+              <th>Mora Recuperada</th>
+              <th>Objetivo Mora</th>
+              <th>Gestiones</th>
+              <th>Visitas Efectivas</th>
+              <th>Visitas No Efectivas</th>
+              <th>% Recuperación</th>
+            </tr>
+          </thead>
+          <tbody class="text-center"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Datos de ejemplo
+const data = [
+  {MES:"ENERO 2025", PERSONAL:"María López", FUNCION:"Supervisor", CREDITOS:0, MORA_RECUPERADA:3000, OBJ_MORA:5000, GESTIONES:0, VISITAS_E:5, VISITAS_NE:2, "%_RECUPERACION":"60.00%"},
+  {MES:"ENERO 2025", PERSONAL:"Ana Torres", FUNCION:"Supervisor", CREDITOS:0, MORA_RECUPERADA:2500, OBJ_MORA:4000, GESTIONES:0, VISITAS_E:4, VISITAS_NE:1, "%_RECUPERACION":"62.50%"},
+  {MES:"FEBRERO 2025", PERSONAL:"María López", FUNCION:"Supervisor", CREDITOS:0, MORA_RECUPERADA:4000, OBJ_MORA:5000, GESTIONES:0, VISITAS_E:6, VISITAS_NE:1, "%_RECUPERACION":"80.00%"},
+  {MES:"FEBRERO 2025", PERSONAL:"Ana Torres", FUNCION:"Supervisor", CREDITOS:0, MORA_RECUPERADA:3000, OBJ_MORA:4000, GESTIONES:0, VISITAS_E:5, VISITAS_NE:1, "%_RECUPERACION":"75.00%"}
+];
+
+const tbody = document.querySelector('tbody');
+const filterMes = document.getElementById('filterMes');
+const filterPersonal = document.getElementById('filterPersonal');
+
+// Llenar filtros
+[...new Set(data.map(d => d.MES))].forEach(m => filterMes.appendChild(new Option(m,m)));
+[...new Set(data.map(d => d.PERSONAL))].forEach(p => filterPersonal.appendChild(new Option(p,p)));
+
+// Función actualizar tabla
+function actualizarTabla() {
+  const mesSel = filterMes.value;
+  const personalSel = filterPersonal.value;
+  tbody.innerHTML = '';
+  data.filter(d => (mesSel==='Todos'||d.MES===mesSel) && (personalSel==='Todos'||d.PERSONAL===personalSel))
+      .forEach(item=>{
+        const porcentaje = parseFloat(item["%_RECUPERACION"]);
+        const porcentajeHTML = porcentaje>=85? `<span class="text-success font-weight-bold">Si cumplió (${item["%_RECUPERACION"]})</span>` : `<span class="text-danger font-weight-bold">No cumplió (${item["%_RECUPERACION"]})</span>`;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.MES}</td>
+          <td>${item.PERSONAL}</td>
+          <td>${item.FUNCION}</td>
+          <td>${item.CREDITOS}</td>
+          <td>$${item.MORA_RECUPERADA.toLocaleString()}</td>
+          <td>$${item.OBJ_MORA.toLocaleString()}</td>
+          <td>${item.GESTIONES}</td>
+          <td>${item.VISITAS_E}</td>
+          <td>${item.VISITAS_NE}</td>
+          <td>${porcentajeHTML}</td>
+        `;
+        tbody.appendChild(row);
+      });
+}
+
+filterMes.addEventListener('change', actualizarTabla);
+filterPersonal.addEventListener('change', actualizarTabla);
+
+// Inicializar
+actualizarTabla();
+
+// Redirigir a detalle_personal.html
+filterPersonal.addEventListener('change', function(){
+  const empleado = filterPersonal.value;
+  if(empleado!=='Todos') window.location.replace(`detalle_personal.html?empleado=${encodeURIComponent(empleado)}`);
+});
+</script>
+</body>
+</html>
