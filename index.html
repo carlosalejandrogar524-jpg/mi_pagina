@@ -7,116 +7,145 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
 
   <style>
-    body { 
-      background-color:#eef2f6; 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    body {
+      background-color: #f3f4f6;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #1f2937;
+      margin:0;
     }
 
-    /* Login */
-    #loginBox {
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      background: rgba(0,0,0,0.2);
-      z-index:1000;
-    }
-    #loginBox .login-inner {
-      background:#fff; 
-      padding:2rem; 
-      border-radius:10px;
-      box-shadow:0 4px 10px rgba(0,0,0,0.2); 
-      text-align:center;
-      width: 90%;
-      max-width: 400px;
-    }
-    #loginBox input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; font-size:1rem;}
-    #loginBox button { padding:10px 20px; border:none; border-radius:5px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; font-size:1rem;}
+    /* Login Box (sin tocar) */
+    #loginBox { position: fixed; top:0; left:0; right:0; bottom:0; display:flex; justify-content:center; align-items:center; background: rgba(0,0,0,0.2); z-index:1000; }
+    #loginBox .login-inner { background:#fff; padding:2rem; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.2); text-align:center; }
+    #loginBox input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
+    #loginBox button { padding:10px 20px; border:none; border-radius:5px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
     #loginBox button:hover { background:#1d4ed8; }
 
-    .navbar-title { 
-      font-weight:700; color:#1f2937; font-size:1.2rem; text-align:center; 
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* Navbar */
+    .navbar {
+      background-color: #1f2937 !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .navbar-title {
+      font-weight:700;
+      font-size:1.3rem;
+      color:#facc15;
+      letter-spacing:0.5px;
     }
 
     /* Sidebar */
-    #sidebarMenu {
-      background: #fff;
-      border-right: 1px solid #ddd;
+    .sidebar {
       min-height: 100vh;
-      padding-top: 1rem;
+      background-color: #f8fafc !important;
+      border-right: 1px solid #e5e7eb;
+      padding-top:1rem;
     }
-    #sidebarMenu .nav-link {
-      font-size: 0.95rem;
-      padding: 0.6rem 1rem;
+    .sidebar .nav-link {
+      font-weight:500;
+      color:#374151;
+      transition: all 0.3s ease;
+      margin-bottom:0.5rem;
+      border-radius:8px;
+      padding:0.6rem 1rem;
+    }
+    .sidebar .nav-link:hover {
+      background-color:#e5e7eb;
+      color:#111827;
+      font-weight:600;
+    }
+    .sidebar .nav-link.active {
+      background-color:#3b82f6;
+      color:#fff !important;
     }
 
-    /* Main content */
+    /* Main Content */
     main {
-      padding: 1rem;
+      min-height: 90vh;
+      display:flex;
+      flex-direction: column;
+      justify-content:flex-start;
+      align-items:center;
+      text-align:center;
+      padding:3rem 2rem;
     }
 
-    .main-content-center h1 {
-      font-size: 1.8rem;
-    }
-    .main-content-center p {
-      font-size: 1rem;
-    }
-
-    .main-buttons a { 
-      margin:0.4rem; padding:0.7rem 1rem; border-radius:0.4rem; 
-      background-color:#2563eb; color:#fff; font-weight:600; text-decoration:none; transition:0.3s; 
-      font-size:0.9rem;
-    }
-    .main-buttons a:hover { background-color:#1d4ed8; text-decoration:none; }
-
+    /* Aviso de cumpleaños */
     #avisoCumple {
       display:none;
-      background: linear-gradient(135deg, #fff3cd, #ffe8a1);
-      color:#5a4100;
-      padding:15px;
-      border-radius:12px;
-      border:2px solid #ffcc00;
+      background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+      color:#1e3a8a;
+      padding:20px;
+      border-radius:15px;
       text-align:center;
       font-weight:600;
-      box-shadow:0 4px 10px rgba(0,0,0,0.15);
+      box-shadow:0 6px 16px rgba(0,0,0,0.1);
+      margin-top: 20px;
+      max-width: 500px;
+      margin-left:auto;
+      margin-right:auto;
       animation: pulse 1.5s infinite alternate;
-      margin-top: 15px;
     }
-    #avisoCumple h4 { font-weight:700; margin-bottom:8px; font-size:1.2rem; }
-    #avisoCumple p { font-size:0.95rem; margin:0; }
+    #avisoCumple h4 { font-weight:700; margin-bottom:10px; }
+    #avisoCumple p { font-size:1.1rem; margin:5px 0; }
 
     @keyframes pulse {
-      from { box-shadow:0 0 5px rgba(255,204,0,0.5); }
-      to { box-shadow:0 0 20px rgba(255,204,0,1); }
+      from { box-shadow:0 0 5px rgba(59,130,246,0.5); }
+      to { box-shadow:0 0 20px rgba(59,130,246,1); }
     }
 
-    /* Responsive adjustments */
-    @media (max-width: 992px) {
-      #sidebarMenu {
-        min-height: auto;
-        position: relative;
-        border-right: none;
-      }
-      .row > main {
-        margin-top: 1rem;
-      }
+    /* Encabezado principal */
+    .main-content-center h1 {
+      font-weight:700;
+      font-size:2.5rem;
+      margin-bottom:0.8rem;
+      color:#1e3a8a;
+    }
+    .main-content-center p.lead {
+      font-size:1.2rem;
+      color:#2563eb;
+      font-weight:500;
+      margin-bottom:2rem;
+    }
+    .main-content-center p { font-size:1rem; margin-top:1rem; color:#1e3a8a; }
+
+    /* Tarjetas de botones azules */
+    .main-buttons {
+      display:flex;
+      flex-wrap: wrap;
+      justify-content:center;
+      gap: 0.8rem;
+      margin-top: 2rem;
+    }
+    .main-buttons .card {
+      flex: 1 1 120px;
+      max-width: 160px;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .main-buttons .card:hover {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
     }
 
-    @media (max-width: 768px) {
-      .main-buttons { flex-direction:column; }
-      .main-buttons a { width: 90%; margin:auto 0.2rem; font-size:0.85rem; }
-      .main-content-center h1 { font-size:1.5rem; }
-      .main-content-center p { font-size:0.9rem; }
-    }
-
-    @media (max-width: 576px) {
-      .main-buttons a { width: 95%; padding:0.6rem 0.8rem; font-size:0.8rem; }
-      .main-content-center h1 { font-size:1.3rem; }
-      .main-content-center p { font-size:0.85rem; }
+    @media (max-width:768px) {
+      .main-buttons { flex-direction: column; gap: 0.6rem; }
+      .main-buttons .card { max-width: 90%; margin: 0 auto; }
+      main { padding:2rem 1rem; }
+      .main-content-center h1 { font-size:2rem; }
+      .main-content-center p.lead { font-size:1.1rem; }
     }
   </style>
 </head>
@@ -134,30 +163,30 @@
 </div>
 
 <!-- Navbar -->
-<nav class="navbar navbar-light sticky-top bg-light shadow">
-  <div class="container-fluid d-flex justify-content-center">
-    <div class="navbar-title">
-      DEPARTAMENTO DE COBROS - SUCURSAL AMAYA
-    </div>
+<nav class="navbar navbar-dark sticky-top">
+  <div class="container w-100">
+    <div class="navbar-title mx-auto">DEPARTAMENTO DE COBROS - SUCURSAL AMAYA</div>
   </div>
 </nav>
 
 <div class="container-fluid">
   <div class="row">
-    <!-- Sidebar siempre visible -->
-    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar shadow-sm">
-      <ul class="nav flex-column">
-        <li class="nav-item"><a class="nav-link active" href="./index.html">INICIO</a></li>
-        <li class="nav-item"><a class="nav-link" href="./gestores.html">GESTORES DE COBRO</a></li>
-        <li class="nav-item"><a class="nav-link" href="./personal.html">PERSONAL DE CAMPO</a></li>
-        <li class="nav-item"><a class="nav-link" href="./reportes.html">REPORTES</a></li>
-        <li class="nav-item"><a class="nav-link" href="./empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
-        <li class="nav-item"><a class="nav-link" href="./mora.html">MORA</a></li>
-      </ul>
+    <!-- Sidebar -->
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse shadow-sm">
+      <div class="sidebar-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link active" href="./index.html">INICIO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./gestores.html">GESTORES DE COBRO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./personal.html">PERSONAL DE CAMPO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./reportes.html">REPORTES</a></li>
+          <li class="nav-item"><a class="nav-link" href="./empleado.html">INFORMACIÓN DEL EMPLEADO</a></li>
+          <li class="nav-item"><a class="nav-link" href="./mora.html">MORA</a></li>
+        </ul>
+      </div>
     </nav>
 
     <!-- Main content -->
-    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-2">
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
 
       <!-- Aviso de cumpleaños -->
       <div id="avisoCumple">
@@ -169,14 +198,14 @@
       <div class="main-content-center">
         <div class="pb-2 mb-4 border-bottom">
           <h1>👋 Bienvenido/a al Departamento de Cobros</h1>
-          <p>"Transformando la gestión de cartera en resultados eficientes"</p>
+          <p class="lead">"Transformando la gestión de cartera en resultados eficientes"</p>
         </div>
 
-        <div class="main-buttons d-flex flex-wrap justify-content-center">
-          <a href="./mision.html">MISIÓN</a>
-          <a href="./vision.html">VISIÓN</a>
-          <a href="./valores.html">VALORES</a>
-          <a href="./acerca.html">ACERCA DE LA PAGINA</a>
+        <div class="main-buttons">
+          <a href="./mision.html" class="card">MISIÓN</a>
+          <a href="./vision.html" class="card">VISIÓN</a>
+          <a href="./valores.html" class="card">VALORES</a>
+          <a href="./acerca.html" class="card">ACERCA DE LA PÁGINA</a>
         </div>
 
         <div class="mt-4">
@@ -218,10 +247,9 @@
     const usuario = document.getElementById("usuario").value;
     const password = document.getElementById("password").value;
 
-    // Usuario y contraseña
     if(usuario === "ALEJANDRO" && password === "CASA123456") {
-      localStorage.setItem("usuario", usuario); // recordar usuario
-      document.getElementById("loginBox").style.display = "none"; // oculta login
+      localStorage.setItem("usuario", usuario);
+      document.getElementById("loginBox").style.display = "none";
     } else {
       document.getElementById("mensajeLogin").textContent = "Usuario o contraseña incorrectos";
     }
