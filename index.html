@@ -14,15 +14,43 @@
       background-color: #f3f4f6;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #1f2937;
-      margin:0;
+      margin: 0;
     }
 
-    /* Login Box (sin tocar) */
-    #loginBox { position: fixed; top:0; left:0; right:0; bottom:0; display:flex; justify-content:center; align-items:center; background: rgba(0,0,0,0.2); z-index:1000; }
-    #loginBox .login-inner { background:#fff; padding:2rem; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.2); text-align:center; }
-    #loginBox input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
-    #loginBox button { padding:10px 20px; border:none; border-radius:5px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
-    #loginBox button:hover { background:#1d4ed8; }
+    /* Login */
+    #loginBox {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+    #loginBox .login-inner {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    #loginBox input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    #loginBox button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #loginBox button:hover { background: #1d4ed8; }
 
     /* Navbar */
     .navbar {
@@ -30,10 +58,10 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     .navbar-title {
-      font-weight:700;
-      font-size:1.3rem;
-      color:#facc15;
-      letter-spacing:0.5px;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #facc15;
+      letter-spacing: 0.5px;
     }
 
     /* Sidebar */
@@ -41,117 +69,115 @@
       min-height: 100vh;
       background-color: #f8fafc !important;
       border-right: 1px solid #e5e7eb;
-      padding-top:1rem;
+      padding-top: 1rem;
     }
     .sidebar .nav-link {
-      font-weight:500;
-      color:#374151;
+      font-weight: 500;
+      color: #374151;
       transition: all 0.3s ease;
-      margin-bottom:0.5rem;
-      border-radius:8px;
-      padding:0.6rem 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
     }
     .sidebar .nav-link:hover {
-      background-color:#e5e7eb;
-      color:#111827;
-      font-weight:600;
+      background-color: #e5e7eb;
+      color: #111827;
+      font-weight: 600;
     }
     .sidebar .nav-link.active {
-      background-color:#3b82f6;
-      color:#fff !important;
+      background-color: #3b82f6;
+      color: #fff !important;
     }
 
-    /* Main Content */
+    /* Main content */
     main {
       min-height: 90vh;
-      display:flex;
+      padding: 3rem 2rem;
+      display: flex;
       flex-direction: column;
-      justify-content:flex-start;
-      align-items:center;
-      text-align:center;
-      padding:3rem 2rem;
+      align-items: center;
     }
 
     /* Aviso de cumpleaños */
     #avisoCumple {
-      display:none;
+      display: none;
       background: linear-gradient(135deg, #bfdbfe, #93c5fd);
-      color:#1e3a8a;
-      padding:20px;
-      border-radius:15px;
-      text-align:center;
-      font-weight:600;
-      box-shadow:0 6px 16px rgba(0,0,0,0.1);
+      color: #1e3a8a;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      font-weight: 600;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
       margin-top: 20px;
       max-width: 500px;
-      margin-left:auto;
-      margin-right:auto;
+      margin-left: auto;
+      margin-right: auto;
       animation: pulse 1.5s infinite alternate;
     }
-    #avisoCumple h4 { font-weight:700; margin-bottom:10px; }
-    #avisoCumple p { font-size:1.1rem; margin:5px 0; }
-
+    #avisoCumple h4 { font-weight: 700; margin-bottom: 10px; }
+    #avisoCumple p { font-size: 1.1rem; margin: 5px 0; }
     @keyframes pulse {
-      from { box-shadow:0 0 5px rgba(59,130,246,0.5); }
-      to { box-shadow:0 0 20px rgba(59,130,246,1); }
+      from { box-shadow: 0 0 5px rgba(59,130,246,0.5); }
+      to { box-shadow: 0 0 20px rgba(59,130,246,1); }
     }
 
-    /* Encabezado principal */
+    /* Bienvenida */
     .main-content-center h1 {
-      font-weight:700;
-      font-size:2.5rem;
-      margin-bottom:0.8rem;
-      color:#1e3a8a;
+      font-weight: 700;
+      font-size: 2.3rem;
+      margin-bottom: 0.5rem;
+      color: #1e3a8a;
+      text-align: center;
     }
     .main-content-center p.lead {
-      font-size:1.2rem;
-      color:#2563eb;
-      font-weight:500;
-      margin-bottom:2rem;
+      font-size: 1.2rem;
+      color: #2563eb;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      text-align: center;
     }
-    .main-content-center p { font-size:1rem; margin-top:1rem; color:#1e3a8a; }
 
-    /* Tarjetas de botones azules */
+    /* Botones principales */
     .main-buttons {
-      display:flex;
+      display: flex;
       flex-wrap: wrap;
-      justify-content:center;
+      justify-content: center;
       gap: 0.8rem;
-      margin-top: 2rem;
+      margin-top: 1rem;
     }
     .main-buttons .card {
       flex: 1 1 120px;
       max-width: 160px;
       padding: 1rem;
       border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
       background: linear-gradient(135deg, #3b82f6, #2563eb);
       color: #fff;
       font-weight: 600;
       text-align: center;
       text-decoration: none;
-      transition: all 0.3s ease;
       cursor: pointer;
+      transition: all 0.3s ease;
       font-size: 0.95rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     }
     .main-buttons .card:hover {
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      transform: translateY(-3px);
     }
 
-    @media (max-width:768px) {
+    @media (max-width: 768px) {
       .main-buttons { flex-direction: column; gap: 0.6rem; }
       .main-buttons .card { max-width: 90%; margin: 0 auto; }
-      main { padding:2rem 1rem; }
-      .main-content-center h1 { font-size:2rem; }
-      .main-content-center p.lead { font-size:1.1rem; }
+      main { padding: 2rem 1rem; }
+      .main-content-center h1 { font-size: 2rem; }
+      .main-content-center p.lead { font-size: 1.1rem; }
     }
   </style>
 </head>
+
 <body>
 
-<!-- Login Box -->
+<!-- Login -->
 <div id="loginBox">
   <div class="login-inner">
     <h2>Iniciar Sesión</h2>
@@ -185,7 +211,7 @@
       </div>
     </nav>
 
-    <!-- Main content -->
+    <!-- Contenido principal -->
     <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
 
       <!-- Aviso de cumpleaños -->
@@ -221,15 +247,11 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // --- Login ---
   document.addEventListener("DOMContentLoaded", function() {
     const usuarioGuardado = localStorage.getItem("usuario");
     const loginBox = document.getElementById("loginBox");
-    if(!usuarioGuardado) {
-      loginBox.style.display = "flex"; // mostrar login
-    } else {
-      loginBox.style.display = "none"; // usuario ya ingresó antes
-    }
+    if (!usuarioGuardado) loginBox.style.display = "flex"; 
+    else loginBox.style.display = "none";
 
     const mensaje = localStorage.getItem("mensajeCumple");
     const aviso = document.getElementById("avisoCumple");
@@ -238,16 +260,13 @@
     if (mensaje) {
       texto.textContent = mensaje.replace("🎉", "").replace("🎂", "").trim();
       aviso.style.display = "block";
-    } else {
-      aviso.style.display = "none";
-    }
+    } else aviso.style.display = "none";
   });
 
   function login() {
     const usuario = document.getElementById("usuario").value;
     const password = document.getElementById("password").value;
-
-    if(usuario === "ALEJANDRO" && password === "CASA123456") {
+    if (usuario === "ALEJANDRO" && password === "CASA123456") {
       localStorage.setItem("usuario", usuario);
       document.getElementById("loginBox").style.display = "none";
     } else {
