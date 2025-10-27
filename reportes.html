@@ -34,20 +34,9 @@ body { background:#f5f7fb; color:#243044; font-family:Inter, system-ui, -apple-s
   align-items:center;
   margin-bottom:1rem;
 }
-.filtros-container label {
-  font-weight:600;
-  margin-right:0.3rem;
-}
-.filtros-container input[type="month"] {
-  height:32px;
-  font-size:0.9rem;
-  padding:0 0.3rem;
-}
-.filtros-container button {
-  height:32px;
-  font-size:0.9rem;
-  padding:0 0.6rem;
-}
+.filtros-container label { font-weight:600; margin-right:0.3rem; }
+.filtros-container input[type="month"] { height:32px; font-size:0.9rem; padding:0 0.3rem; }
+.filtros-container button { height:32px; font-size:0.9rem; padding:0 0.6rem; }
 
 .chart-desc {
   font-size:0.85rem;
@@ -78,7 +67,48 @@ body { background:#f5f7fb; color:#243044; font-family:Inter, system-ui, -apple-s
     permitiendo identificar tendencias, desempeño individual y global, así como áreas de mejora.
   </p>
 
-  <!-- FILTROS COMPACTOS -->
+  <!-- NUEVA TABLA: GESTIONES POR EMPLEADO -->
+  <div class="filtros-container">
+    <label for="filterMes">Filtrar por Mes:</label>
+    <select id="filterMes" onchange="updateGestionesTabla()">
+      <option value="Todos">Todos los meses</option>
+    </select>
+  </div>
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-white"><strong>Gestiones por Empleado</strong></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="thead-dark">
+            <tr>
+              <th>Mes</th>
+              <th>Gestor</th>
+              <th>Llamada</th>
+              <th>WhatsApp</th>
+              <th>Correo</th>
+              <th>Avisos</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="gestionesTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-6 mb-3">
+      <div class="chart-desc">Total de Gestiones por Empleado</div>
+      <canvas id="chartGestionesEmpleados" class="grafico"></canvas>
+    </div>
+    <div class="col-md-6 mb-3">
+      <div class="chart-desc">Tendencia Mensual de Gestiones Totales</div>
+      <canvas id="chartGestionesLinea" class="grafico"></canvas>
+    </div>
+  </div>
+
+  <!-- FILTROS Y TABLA CONSOLIDADO ORIGINAL -->
   <div class="filtros-container">
     <label for="filterDesde">Desde:</label>
     <input type="month" id="filterDesde">
@@ -118,7 +148,7 @@ body { background:#f5f7fb; color:#243044; font-family:Inter, system-ui, -apple-s
     </div>
   </div>
 
-  <!-- GRÁFICOS -->
+  <!-- GRÁFICOS CONSOLIDADO -->
   <div class="row mb-4">
     <div class="col-md-4 mb-3">
       <div class="chart-desc">Distribución del monto recuperado por mes</div>
@@ -144,15 +174,14 @@ body { background:#f5f7fb; color:#243044; font-family:Inter, system-ui, -apple-s
 // CONFIG
 // -------------------------
 const proxy = "https://api.codetabs.com/v1/proxy?quest=";
-const sheetGestiones = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUW4J2HxFjjHfPwC_QdcaPNtqNnW7ZGezgMHqGm8SIw3STfzDoc7AbXlSLhAqpPib6IDiRNYrgT11-/pub?gid=1371742498&single=true&output=csv";
+const sheetGestiones = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWc7tNf1MsbdXNCf7_To0EUb25mXuEE-SnH4wg3_cd7Xa_-kYQNJXOvS6vAbzr9EGNOCyI8bw4KIwE/pub?gid=174846463&single=true&output=csv";
 const sheetRecuperado = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTh4nQC1nPAHgWvJ0SIlL5AhnV4d6v6htBlGQnCJsLvLeC1IsfYDglzJ1JyVKvRAJ6apOEocWmvpsKo/pub?gid=1552374160&single=true&output=csv";
-const OBJETIVO_TOTAL = 10000; // Objetivo total
+const OBJETIVO_TOTAL = 10000;
 
 // -------------------------
 // UTILIDADES
 // -------------------------
 function money(v){ return `$${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`; }
-
 function parseCSV(text){
   const rows = text.trim().split("\n").map(r => r.split(",").map(c => c.trim()));
   const headers = rows.shift();
@@ -164,9 +193,75 @@ function parseCSV(text){
 }
 
 // -------------------------
-// CARGAR DATOS
+// GESTIONES POR EMPLEADO
+// -------------------------
+let gestionesData = [];
+let chartEmpleados, chartLinea;
+const mesesOrden = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+async function loadGestiones(){
+  try{
+    const res = await fetch(proxy + encodeURIComponent(sheetGestiones));
+    gestionesData = parseCSV(await res.text());
+
+    // llenar filtro meses
+    const meses = [...new Set(gestionesData.map(g=>g.MES).filter(m=>m))];
+    const filter = document.getElementById("filterMes");
+    mesesOrden.forEach(m=>{
+      if(meses.includes(m)){
+        const opt = document.createElement("option");
+        opt.value = m; opt.textContent = m;
+        filter.appendChild(opt);
+      }
+    });
+
+    updateGestionesTabla();
+  }catch(e){ console.error(e); alert("Error cargando gestiones"); }
+}
+
+function updateGestionesTabla(){
+  const mesSeleccionado = document.getElementById("filterMes").value;
+  const tbody = document.getElementById("gestionesTbody");
+  tbody.innerHTML="";
+
+  const empleados = {};
+  gestionesData.forEach(g=>{
+    if(mesSeleccionado!=="Todos" && g.MES!==mesSeleccionado) return;
+    const gest = g.GESTION.trim();
+    const gestor = g.GESTOR.trim();
+    if(!empleados[gestor]) empleados[gestor]={Llamada:0,WhatsApp:0,Correo:0,Avisos:0};
+    if(gest.toLowerCase().includes("llamada")) empleados[gestor].Llamada++;
+    else if(gest.toLowerCase().includes("whatsapp")) empleados[gestor].WhatsApp++;
+    else if(gest.toLowerCase().includes("correo")) empleados[gestor].Correo++;
+    else if(gest.toLowerCase().includes("aviso")) empleados[gestor].Avisos++;
+  });
+
+  for(const [gestor, vals] of Object.entries(empleados)){
+    const total = vals.Llamada + vals.WhatsApp + vals.Correo + vals.Avisos;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${mesSeleccionado}</td><td>${gestor}</td><td>${vals.Llamada}</td><td>${vals.WhatsApp}</td><td>${vals.Correo}</td><td>${vals.Avisos}</td><td>${total}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  // Gráfico barras
+  const labels = Object.keys(empleados);
+  const dataTotales = Object.values(empleados).map(v=>v.Llamada+v.WhatsApp+v.Correo+v.Avisos);
+  const ctx = document.getElementById("chartGestionesEmpleados").getContext("2d");
+  if(chartEmpleados) chartEmpleados.destroy();
+  chartEmpleados = new Chart(ctx,{ type:"bar", data:{labels,datasets:[{label:"Total de Gestiones", data:dataTotales, backgroundColor:"#28a745"}]}, options:{indexAxis:'y', plugins:{legend:{display:false}}} });
+
+  // Gráfico línea total mensual
+  const totalMeses = mesesOrden.map(m=>gestionesData.filter(g=>g.MES===m).length);
+  const ctx2 = document.getElementById("chartGestionesLinea").getContext("2d");
+  if(chartLinea) chartLinea.destroy();
+  chartLinea = new Chart(ctx2,{ type:"line", data:{labels:mesesOrden, datasets:[{label:"Gestiones Totales", data:totalMeses, borderColor:"#0d6efd", fill:false}]} });
+}
+
+// -------------------------
+// CONSOLIDADO ORIGINAL
 // -------------------------
 async function loadAll(){
+  await loadGestiones(); // primero cargar la tabla superior
   try{
     const desde = document.getElementById('filterDesde').value;
     const hasta = document.getElementById('filterHasta').value;
@@ -177,7 +272,6 @@ async function loadAll(){
     const gestiones = parseCSV(await gestionesRes.text());
     const recuperado = parseCSV(await recuperadoRes.text());
 
-    // Filtrar por rango de meses si aplica
     const filtradosRec = recuperado.filter(r=>{
       if(!r["MES"]) return false;
       if(desde && r["MES"] < desde) return false;
@@ -192,7 +286,9 @@ async function loadAll(){
       return true;
     });
 
-    const meses = [...new Set([...filtradosRec.map(d=>d["MES"]), ...filtradosGest.map(d=>d["MES"])]).values()].filter(m=>m).sort();
+    const meses = [...new Set([...filtradosRec.map(d=>d["MES"]), ...filtradosGest.map(d=>d["MES"])]).values()]
+      .filter(m => m)
+      .sort((a,b) => mesesOrden.indexOf(a) - mesesOrden.indexOf(b));
 
     const consolidado = meses.map(m=>{
       const pagosMes = filtradosRec.filter(d=>d["MES"]===m);
@@ -219,14 +315,11 @@ async function loadAll(){
     renderTable(consolidado);
     renderCharts(consolidado);
 
-  } catch(e){
-    console.error("Error cargando datos:", e);
-    alert("No se pudieron cargar los datos del reporte.");
-  }
+  } catch(e){ console.error("Error cargando datos:", e); alert("No se pudieron cargar los datos del reporte."); }
 }
 
 // -------------------------
-// RENDER TABLA
+// RENDER TABLA CONSOLIDADO
 // -------------------------
 function renderTable(data){
   const tbody = document.getElementById("consolidadoTbody");
@@ -256,7 +349,7 @@ function renderTable(data){
 }
 
 // -------------------------
-// GRÁFICOS
+// GRÁFICOS CONSOLIDADO
 // -------------------------
 let chartPie, chartBar, chartLine;
 function renderCharts(data){
@@ -268,27 +361,9 @@ function renderCharts(data){
   if(chartBar) chartBar.destroy();
   if(chartLine) chartLine.destroy();
 
-  chartPie = new Chart(ctxPie,{
-    type:'pie',
-    data:{labels:data.map(d=>d.MES), datasets:[{data:data.map(d=>d.RECUPERADO)}]},
-    options:{plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{label:function(ctx){return money(ctx.raw);}}}}}
-  });
-
-  chartBar = new Chart(ctxBar,{
-    type:'bar',
-    data:{labels:data.map(d=>d.MES), datasets:[
-      {label:'Recuperado',data:data.map(d=>d.RECUPERADO), backgroundColor:'#28a745'},
-      {label:'Objetivo', data:data.map(d=>d.OBJETIVO), backgroundColor:'#0d6efd'}
-    ]}
-  });
-
-  chartLine = new Chart(ctxLine,{
-    type:'line',
-    data:{labels:data.map(d=>d.MES), datasets:[
-      {label:'Recuperado',data:data.map(d=>d.RECUPERADO), borderColor:'#28a745', fill:false},
-      {label:'Objetivo', data:data.map(d=>d.OBJETIVO), borderColor:'#0d6efd', fill:false}
-    ]}
-  });
+  chartPie = new Chart(ctxPie,{type:'pie',data:{labels:data.map(d=>d.MES), datasets:[{data:data.map(d=>d.RECUPERADO)}]}, options:{plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{label:function(ctx){return money(ctx.raw);}}}}}});
+  chartBar = new Chart(ctxBar,{type:'bar',data:{labels:data.map(d=>d.MES), datasets:[{label:'Recuperado',data:data.map(d=>d.RECUPERADO), backgroundColor:'#28a745'},{label:'Objetivo', data:data.map(d=>d.OBJETIVO), backgroundColor:'#0d6efd'}]}});
+  chartLine = new Chart(ctxLine,{type:'line',data:{labels:data.map(d=>d.MES), datasets:[{label:'Recuperado',data:data.map(d=>d.RECUPERADO), borderColor:'#28a745', fill:false},{label:'Objetivo', data:data.map(d=>d.OBJETIVO), borderColor:'#0d6efd', fill:false}]}});
 }
 
 document.addEventListener("DOMContentLoaded", loadAll);
