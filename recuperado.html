@@ -51,13 +51,27 @@
 </div>
 
 <script>
-// ---------------- CONFIG ----------------
+// -------------------------
+// CONFIG
+// -------------------------
 const urlParams = new URLSearchParams(window.location.search);
+
+// Obtener empleado y mes desde la URL
 const empleado = urlParams.get('empleado') ? decodeURIComponent(urlParams.get('empleado')) : "";
+const mesSeleccionado = urlParams.get('mes') ? decodeURIComponent(urlParams.get('mes')) : "";
+
 document.getElementById('empleadoNombre').textContent = empleado || "No definido";
+if (mesSeleccionado) {
+  // Mostrar el mes en el título o subtítulo si quieres
+  const sub = document.createElement('small');
+  sub.classList.add('text-muted');
+  sub.textContent = `— Mes: ${mesSeleccionado}`;
+  document.getElementById('empleadoNombre').appendChild(sub);
+}
 
-document.getElementById('btnBack').addEventListener('click', ()=> history.back());
+document.getElementById('btnBack').addEventListener('click', () => history.back());
 
+// URLs de las hojas de cálculo
 const csvRaw = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTh4nQC1nPAHgWvJ0SIlL5AhnV4d6v6htBlGQnCJsLvLeC1IsfYDglzJ1JyVKvRAJ6apOEocWmvpsKo/pub?gid=1552374160&single=true&output=csv";
 const proxy = "https://api.codetabs.com/v1/proxy?quest=";
 const csvUrl = proxy + encodeURIComponent(csvRaw);
@@ -161,9 +175,14 @@ async function cargarRecuperados(){
     const sample = objs[0];
     const gestorKey = Object.keys(sample).find(k => normalize(k).includes('gestor') || normalize(k).includes('empleado')) || null;
 
-    const filtrados = gestorKey && empleado
-      ? objs.filter(r => normalize(getField(r, gestorKey)) === normalize(empleado))
-      : objs;
+    let filtrados = gestorKey && empleado
+  ? objs.filter(r => normalize(getField(r, gestorKey)) === normalize(empleado))
+  : objs;
+
+// 🔸 Filtro adicional por mes seleccionado
+if (mesSeleccionado) {
+  filtrados = filtrados.filter(r => normalize(getField(r, 'MES', 'Mes', 'mes')) === normalize(mesSeleccionado));
+}
 
     if (!filtrados.length){
       tbody.innerHTML = `<tr><td colspan="9">No hay pagos registrados para ${empleado || 'este gestor'}.</td></tr>`;
