@@ -33,6 +33,7 @@
         <tr>
           <th>MES</th>
           <th>GESTOR</th>
+          <th>NUMERO DE TARJETA</th>
           <th>CLIENTE</th>
           <th>DUI</th>
           <th>TELÉFONO</th>
@@ -193,14 +194,15 @@ if (mesSeleccionado) {
     let sumaRecuperado = 0;
     let sumaPendiente = 0;
 
-    filtrados.forEach(r => {
-      const mes = getField(r, 'MES', 'Mes', 'mes') || '-';
-      const gestor = getField(r, 'GESTOR', 'Gestor', 'Empleado') || '-';
-      const cliente = getField(r, 'CLIENTE', 'Cliente', 'Nombre Cliente') || '-';
-      const dui = getField(r, 'DUI', 'Documento') || getField(r,'IDENTIFICACION') || '-';
-      const telefono = getField(r, 'TELEFONO', 'Telefono', 'TEL') || '-';
-      const deuda = toNumber(getField(r, 'DEUDA TOTAL', 'DEUDA', 'TOTAL DEUDA', 'TOTAL PENDIENTE') || '');
-      const fechaPago = getField(r, 'FECHA DE PAGO', 'FECHA PAGO', 'FECHA', 'FECHA_DE_PAGO') || getField(r,'FECHA') || '-';
+   filtrados.forEach(r => {
+  const mes = getField(r, 'MES', 'Mes', 'mes') || '-';
+  const gestor = getField(r, 'GESTOR', 'Gestor', 'Empleado') || '-';
+  const numeroTarjeta = getField(r, 'NUMERO DE TARJETA', 'Numero de tarjeta') || '-';
+  const cliente = getField(r, 'CLIENTE', 'Cliente', 'Nombre Cliente') || '-';
+  const dui = getField(r, 'DUI', 'Documento') || getField(r, 'IDENTIFICACION') || '-';
+  const telefono = getField(r, 'TELEFONO', 'Telefono', 'TEL') || '-';
+  const deuda = toNumber(getField(r, 'DEUDA TOTAL', 'DEUDA', 'TOTAL DEUDA', 'TOTAL PENDIENTE') || 0);
+  const fechaPago = getField(r, 'FECHA DE PAGO', 'FECHA PAGO', 'FECHA', 'FECHA_DE_PAGO') || getField(r, 'FECHA') || '-';
 
       // <-- CAMBIO: Solo columna RECUPERADO
       const recuperado = toNumber(getField(r, 'RECUPERADO') || '');
@@ -248,3 +250,4 @@ setInterval(cargarRecuperados, 60000);
 </script>
 </body>
 </html>
+
