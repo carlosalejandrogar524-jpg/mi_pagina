@@ -52,6 +52,7 @@ h3 { font-weight:700; color:#243044; }
         <tr>
           <th>MES</th>
           <th>GESTOR</th>
+          <th>NUMERO DE TARJETA</th>
           <th>CLIENTE</th>
           <th>DUI</th>
           <th>TELEFONO</th>
@@ -182,6 +183,7 @@ async function cargarGestiones() {
         <td>${r[mesKey] || '-'}</td>
         <td>${r[gestorKey] || '-'}</td>
         <td>${r["CLIENTE"] || '-'}</td>
+        <td>${r["CLIENTE"] || '-'}</td>
         <td>${r["DUI"] || '-'}</td>
         <td>${r["TELEFONO"] || '-'}</td>
         <td>${r["DIRECCION"] || '-'}</td>
@@ -250,3 +252,4 @@ setInterval(cargarGestiones, 60000);
 </script>
 </body>
 </html>
+
