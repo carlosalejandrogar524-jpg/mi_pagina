@@ -33,6 +33,7 @@ body { background:#f8f9fa; font-family:Inter, system-ui; color:#243044; }
         <tr>
           <th>MES</th>
           <th>GESTOR</th>
+          <th>NUMERO DE TARJETA</th>
           <th>CLIENTE</th>
           <th>DUI</th>
           <th>TELÉFONO</th>
@@ -120,30 +121,32 @@ async function cargarCreditos(){
     tbody.innerHTML = '';
     let sumaTotal = 0;
 
-    filtrados.forEach(r=>{
-      const mes = r["MES"] || '-';
-      const gestor = r["GESTOR"] || '-';
-      const cliente = r["CLIENTE"] || '-';
-      const dui = r["DUI"] || '-';
-      const telefono = r["TELEFONO"] || '-';
-      const producto = r["PRODUCTO"] || '-';
-      const fecha = r["FECHA DE APROBACION"] || '-';
-      const monto = toNumber(r["MONTO POR CUOTA"]);
-      sumaTotal += monto;
+   filtrados.forEach(r=>{
+  const mes = r["MES"] || '-';
+  const gestor = r["GESTOR"] || '-';
+  const numeroTarjeta = r["NUMERO DE TARJETA"] || '-';
+  const cliente = r["CLIENTE"] || '-';
+  const dui = r["DUI"] || '-';
+  const telefono = r["TELEFONO"] || '-';
+  const producto = r["PRODUCTO"] || '-';
+  const fecha = r["FECHA DE APROBACION"] || '-';
+  const monto = toNumber(r["MONTO POR CUOTA"]);
+  sumaTotal += monto;
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${mes}</td>
-        <td>${gestor}</td>
-        <td>${cliente}</td>
-        <td>${dui}</td>
-        <td>${telefono}</td>
-        <td>${money(monto)}</td>
-        <td>${producto}</td>
-        <td>${fecha}</td>
-      `;
-      tbody.appendChild(tr);
-    });
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${mes}</td>
+    <td>${gestor}</td>
+    <td>${numeroTarjeta}</td>
+    <td>${cliente}</td>
+    <td>${dui}</td>
+    <td>${telefono}</td>
+    <td>${money(monto)}</td>
+    <td>${producto}</td>
+    <td>${fecha}</td>
+  `;
+  tbody.appendChild(tr);
+});
 
     // Totales
     tfoot.innerHTML = `
