@@ -213,7 +213,7 @@ document.getElementById("btnBuscar").addEventListener("click", ()=>{
     estado.textContent="✅ CLIENTE ENCONTRADO."; estado.style.color="green";
     resumen.innerHTML = `<h5>RESUMEN DEL CLIENTE</h5>
       <p><strong>NÚMERO DE TARJETA:</strong> ${cliente['numerodetarjeta']||'N/A'}</p>
-      <p><strong>NOMBRE:</strong> ${cliente['nombrecliente']||'N/A'}</p>
+      <p><strong>NOMBRE DEL CLIENTE:</strong> ${cliente['nombredelcliente']||'N/A'}</p>
       <p><strong>TELEFONO:</strong> ${cliente['telefono']||'N/A'}</p>
       <p><strong>DIRECCION:</strong> ${cliente['direccion']||'N/A'}</p>
       <p><strong>DIAS PENDIENTES:</strong> ${cliente['diaspendientes']||'0'}</p>
@@ -229,3 +229,4 @@ cargarDatos();
 
 </body>
 </html>
+
