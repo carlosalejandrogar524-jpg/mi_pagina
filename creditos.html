@@ -1,22 +1,23 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Créditos Otorgados</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Créditos — Detalle</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-  body { background-color:#f8f9fa; }
-  .table th, .table td { text-align:center; font-size:0.9rem; }
-  .container { margin-top:1.5rem; }
-  .small-muted { color:#666; margin-bottom:0.75rem; display:block; }
+body { background:#f8f9fa; font-family:Inter, system-ui; color:#243044; }
+.container { margin-top:1.25rem; }
+.table th, .table td { text-align:center; vertical-align:middle; font-size:0.95rem; }
+.small-muted { color:#666; display:block; margin-bottom:.6rem; }
+.totales { font-weight:800; background:#f1f3f5; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="d-flex justify-content-between align-items-center mb-2">
     <div>
-      <h4 class="mb-0">Créditos Otorgados — <small id="empleadoNombre">Empleado</small></h4>
+      <h4 class="mb-0 text-primary">Créditos — <small id="empleadoNombre">Cargando...</small></h4>
       <span class="small-muted">Datos cargados automáticamente desde Google Sheets</span>
     </div>
     <div>
@@ -26,7 +27,7 @@
 
   <div id="alertBox" style="display:none" class="mb-3"></div>
 
-  <div class="table-responsive mt-2">
+  <div class="table-responsive">
     <table class="table table-striped table-bordered">
       <thead class="thead-dark">
         <tr>
@@ -35,137 +36,100 @@
           <th>CLIENTE</th>
           <th>DUI</th>
           <th>TELÉFONO</th>
-          <th>DIRECCIÓN</th>
-          <th>FECHA DE APROBACIÓN</th>
+          <th>MONTO CRÉDITO</th>
           <th>PRODUCTO</th>
-          <th>PRIMA</th>
-          <th>MONTO POR CUOTA</th>
+          <th>FECHA DE APROBACION</th>
         </tr>
       </thead>
       <tbody id="tbodyCreditos">
-        <tr><td colspan="10">Cargando créditos...</td></tr>
+        <tr><td colspan="8">Cargando créditos...</td></tr>
       </tbody>
+      <tfoot id="tfootCreditos"></tfoot>
     </table>
   </div>
 </div>
 
 <script>
-// --- CONFIGURACIÓN ---
-// Nuevo enlace de tu hoja de créditos 👇
-const csvUrlRaw = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUW4J2HxFjjHfPwC_QdcaPNtqNnW7ZGezgMHqGm8SIw3STfzDoc7AbXlSLhAqpPib6IDiRNYrgT11-/pub?gid=1371742498&single=true&output=csv";
-const proxyUrl = "https://api.codetabs.com/v1/proxy?quest=";
-const csvUrl = proxyUrl + encodeURIComponent(csvUrlRaw);
-
-// Obtener nombre de empleado desde URL (?empleado=Juan%20Perez)
+// Parámetros URL
 const urlParams = new URLSearchParams(window.location.search);
 const empleado = urlParams.get('empleado') ? decodeURIComponent(urlParams.get('empleado')) : "";
+const mesSeleccionado = urlParams.get('mes') ? decodeURIComponent(urlParams.get('mes')) : "";
 document.getElementById('empleadoNombre').textContent = empleado || "No definido";
+if(mesSeleccionado){
+  const sub = document.createElement('small');
+  sub.classList.add('text-muted');
+  sub.textContent = ` — Mes: ${mesSeleccionado}`;
+  document.getElementById('empleadoNombre').appendChild(sub);
+}
 
 // Botón volver
-document.getElementById('btnBack').addEventListener('click', () => window.history.back());
+document.getElementById('btnBack').addEventListener('click', () => history.back());
 
-// Mostrar alertas
-function showAlert(msg, type='danger'){
+// URL CSV de créditos
+const csvRaw = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUW4J2HxFjjHfPwC_QdcaPNtqNnW7ZGezgMHqGm8SIw3STfzDoc7AbXlSLhAqpPib6IDiRNYrgT11-/pub?gid=1371742498&single=true&output=csv";
+const proxy = "https://api.codetabs.com/v1/proxy?quest=";
+const csvUrl = proxy + encodeURIComponent(csvRaw);
+
+// Funciones auxiliares
+function showAlert(msg,type='danger'){
   const box = document.getElementById('alertBox');
   box.style.display = 'block';
   box.innerHTML = `<div class="alert alert-${type}" role="alert">${msg}</div>`;
 }
 
-// --- Funciones de utilidad ---
-function parseCSV(text){
-  const rows = [];
-  let cur = '', row = [], inQuotes = false;
-  for (let i = 0; i < text.length; i++){
-    const ch = text[i], next = text[i+1];
-    if (ch === '"'){
-      if (inQuotes && next === '"'){ cur += '"'; i++; }
-      else { inQuotes = !inQuotes; }
-      continue;
-    }
-    if (ch === ',' && !inQuotes){ row.push(cur); cur=''; continue; }
-    if ((ch === '\n' || ch === '\r') && !inQuotes){
-      if (cur !== '' || row.length > 0){ row.push(cur); rows.push(row); row=[]; cur=''; }
-      continue;
-    }
-    cur += ch;
-  }
-  if (cur !== '' || row.length > 0){ row.push(cur); rows.push(row); }
-  return rows.filter(r => r.length > 1 || (r.length === 1 && r[0].trim() !== ""));
+function money(v){ return `$${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`; }
+function normalize(s){ return s ? s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase() : ''; }
+function toNumber(v){
+  if(!v) return 0;
+  const n = parseFloat(v.toString().replace(/[^\d.-]/g,''));
+  return isNaN(n)?0:n;
 }
 
-function csvRowsToObjects(rows){
-  if (!rows || rows.length === 0) return [];
-  const headers = rows[0].map(h => h ? h.trim() : "");
-  return rows.slice(1).map(r => {
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = (r[i] || "").trim());
-    return obj;
-  });
-}
-
-function getField(row, ...names){
-  const keys = Object.keys(row);
-  const normalize = s => s ? s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase() : '';
-  for (const name of names){
-    const norm = normalize(name);
-    for (const k of keys){
-      if (normalize(k) === norm) return row[k];
-    }
-  }
-  return "";
-}
-
-// --- Cargar CSV ---
-async function fetchCSV(){
-  const res = await fetch(csvUrl);
-  if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-  const text = await res.text();
-  if (text.trim().startsWith("{")){
-    try {
-      const json = JSON.parse(text);
-      if (json.contents) return json.contents;
-    } catch(e){ console.warn("JSON inválido", e); }
-  }
-  return text;
-}
-
-// --- Cargar Créditos ---
+// Cargar créditos
 async function cargarCreditos(){
   const tbody = document.getElementById('tbodyCreditos');
-  tbody.innerHTML = `<tr><td colspan="10">Cargando créditos...</td></tr>`;
-  try {
-    const csvText = await fetchCSV();
-    const rows = parseCSV(csvText);
-    const objs = csvRowsToObjects(rows);
+  const tfoot = document.getElementById('tfootCreditos');
+  tbody.innerHTML = `<tr><td colspan="8">Cargando créditos...</td></tr>`;
+  tfoot.innerHTML = '';
 
-    if (!objs.length){
-      tbody.innerHTML = `<tr><td colspan="10">No hay créditos registrados.</td></tr>`;
-      return;
-    }
-
-    // Filtrar solo los créditos del gestor actual
-    const datosFiltrados = objs.filter(row => {
-      const gestor = getField(row, 'GESTOR');
-      return gestor && empleado && gestor.toLowerCase() === empleado.toLowerCase();
+  try{
+    const res = await fetch(csvUrl);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = text.trim().split("\n").map(r => r.split(","));
+    const headers = rows.shift();
+    const data = rows.map(r=>{
+      const obj = {};
+      headers.forEach((h,i)=> obj[h.trim()] = r[i]? r[i].trim() : "");
+      return obj;
     });
 
-    if (!datosFiltrados.length){
-      tbody.innerHTML = `<tr><td colspan="10">No hay créditos registrados para ${empleado}.</td></tr>`;
+    // Filtrar por empleado
+    let filtrados = data.filter(r => normalize(r["GESTOR"])===normalize(empleado));
+
+    // Filtrar por mes si existe parámetro
+    if(mesSeleccionado){
+      filtrados = filtrados.filter(r => normalize(r["MES"])===normalize(mesSeleccionado));
+    }
+
+    if(!filtrados.length){
+      tbody.innerHTML = `<tr><td colspan="8">No hay créditos registrados para este empleado${mesSeleccionado ? " en "+mesSeleccionado : ""}.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = '';
-    datosFiltrados.forEach(row=>{
-      const mes = getField(row,'MES') || '-';
-      const gestor = getField(row,'GESTOR') || '-';
-      const cliente = getField(row,'CLIENTE') || '-';
-      const dui = getField(row,'DUI') || '-';
-      const tel = getField(row,'TELEFONO') || '-';
-      const direccion = getField(row,'DIRECCION') || '-';
-      const fechaAprob = getField(row,'FECHA DE APROBACION') || '-';
-      const producto = getField(row,'PRODUCTO') || '-';
-      const prima = getField(row,'PRIMA') || '-';
-      const monto = getField(row,'MONTO POR CUOTA') || '-';
+    let sumaTotal = 0;
+
+    filtrados.forEach(r=>{
+      const mes = r["MES"] || '-';
+      const gestor = r["GESTOR"] || '-';
+      const cliente = r["CLIENTE"] || '-';
+      const dui = r["DUI"] || '-';
+      const telefono = r["TELEFONO"] || '-';
+      const producto = r["PRODUCTO"] || '-';
+      const fecha = r["FECHA DE APROBACION"] || '-';
+      const monto = toNumber(r["MONTO POR CUOTA"]);
+      sumaTotal += monto;
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -173,24 +137,31 @@ async function cargarCreditos(){
         <td>${gestor}</td>
         <td>${cliente}</td>
         <td>${dui}</td>
-        <td>${tel}</td>
-        <td>${direccion}</td>
-        <td>${fechaAprob}</td>
+        <td>${telefono}</td>
+        <td>${money(monto)}</td>
         <td>${producto}</td>
-        <td>${prima}</td>
-        <td>${monto}</td>`;
+        <td>${fecha}</td>
+      `;
       tbody.appendChild(tr);
     });
 
-    document.getElementById('alertBox').style.display = 'none';
-  } catch (err){
+    // Totales
+    tfoot.innerHTML = `
+      <tr class="totales">
+        <td colspan="5" style="text-align:right">TOTAL CRÉDITOS:</td>
+        <td>${money(sumaTotal)}</td>
+        <td colspan="2"></td>
+      </tr>
+    `;
+
+  }catch(err){
     console.error(err);
-    showAlert(`No se pudieron cargar los créditos: ${err.message}`, 'danger');
-    tbody.innerHTML = `<tr><td colspan="10" class="text-danger">Error cargando datos.</td></tr>`;
+    showAlert(`Error al cargar créditos: ${err.message}`);
+    tbody.innerHTML = `<tr><td colspan="8" class="text-danger">Error cargando datos.</td></tr>`;
   }
 }
 
-// --- Iniciar ---
+// Ejecutar
 cargarCreditos();
 setInterval(cargarCreditos,60000);
 </script>
