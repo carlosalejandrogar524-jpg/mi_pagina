@@ -1,21 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Detalle del Empleado — Gestor</title>
-
-<!-- Bootstrap -->
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Gestor de Cobros</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 body { background:#f5f7fb; color:#243044; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
 .header { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:1rem 0; }
 .title { font-weight:800; font-size:1.25rem; }
-.card-kpi { padding:0.8rem; border-radius:.6rem; color:#fff; font-weight:700; text-align:center; }
+.card-kpi { padding:0.8rem; border-radius:.6rem; color:#fff; font-weight:700; text-align:center; flex:1; margin:0.2rem; }
 .bg-rec { background: linear-gradient(90deg,#28a745,#66d28f); }
 .bg-obj { background: linear-gradient(90deg,#0d6efd,#66b0ff); }
 .bg-fal { background: linear-gradient(90deg,#ffc107,#ffe08a); color:#000; }
@@ -28,14 +23,13 @@ body { background:#f5f7fb; color:#243044; font-family:Inter, system-ui, -apple-s
 </style>
 </head>
 <body>
-
 <div class="container">
 
   <!-- HEADER -->
   <div class="header">
     <div>
-      <div class="title">Detalle del Empleado — <span id="empleadoNombre">Cargando...</span></div>
-      <small class="text-muted" id="empleadoCargo">Gestor de Cobros — Sucursal</small>
+      <div class="title">Gestor de cobros — <span id="empleadoNombre">Cargando...</span></div>
+      <small class="text-muted" id="empleadoCargo">Sucursal Amaya</small>
     </div>
     <button class="btn btn-secondary" onclick="history.back()">← Regresar</button>
   </div>
@@ -80,9 +74,6 @@ body { background:#f5f7fb; color:#243044; font-family:Inter, system-ui, -apple-s
 
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
 // -------------------------
 // CONFIG
@@ -93,22 +84,21 @@ document.getElementById('empleadoNombre').textContent = nombreEmpleado;
 document.getElementById('empleadoCargo').textContent = "Gestor de Cobros — Sucursal Amaya";
 
 const proxy = "https://api.codetabs.com/v1/proxy?quest=";
-const sheetGestiones = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUW4J2HxFjjHfPwC_QdcaPNtqNnW7ZGezgMHqGm8SIw3STfzDoc7AbXlSLhAqpPib6IDiRNYrgT11-/pub?gid=1371742498&single=true&output=csv";
+const sheetGestiones = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWc7tNf1MsbdXNCf7_To0EUb25mXuEE-SnH4wg3_cd7Xa_-kYQNJXOvS6vAbzr9EGNOCyI8bw4KIwE/pub?gid=174846463&single=true&output=csv";
 const sheetRecuperado = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTh4nQC1nPAHgWvJ0SIlL5AhnV4d6v6htBlGQnCJsLvLeC1IsfYDglzJ1JyVKvRAJ6apOEocWmvpsKo/pub?gid=1552374160&single=true&output=csv";
+const sheetCreditos = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUW4J2HxFjjHfPwC_QdcaPNtqNnW7ZGezgMHqGm8SIw3STfzDoc7AbXlSLhAqpPib6IDiRNYrgT11-/pub?gid=1371742498&single=true&output=csv";
 
 // -------------------------
 // UTILIDADES
 // -------------------------
 function money(v){ return `$${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`; }
-
-function parseCSV(text){
-  const rows = text.trim().split("\n").map(r => r.split(",").map(c => c.trim()));
-  const headers = rows.shift();
-  return rows.map(r => {
-    const obj = {};
-    headers.forEach((h,i) => obj[h.trim()] = r[i] ? r[i].trim() : "");
-    return obj;
-  });
+function normalize(s){ return s ? s.toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase() : ''; }
+function normalizeMes(m){ return m ? m.toString().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase() : ""; }
+function toNumber(v){ if(!v) return 0; const n=parseFloat(v.toString().replace(/[^\d.-]/g,'')); return isNaN(n)?0:n; }
+function parseCSV(text){ 
+  const rows=text.trim().split("\n").map(r=>r.split(",")); 
+  const headers=rows.shift(); 
+  return rows.map(r=>{ const obj={}; headers.forEach((h,i)=> obj[h.trim()]=r[i]?r[i].trim():""); return obj; });
 }
 
 // -------------------------
@@ -116,47 +106,53 @@ function parseCSV(text){
 // -------------------------
 async function loadAll(){
   try{
-    const gestionesRes = await fetch(proxy + encodeURIComponent(sheetGestiones));
-    const recuperadoRes = await fetch(proxy + encodeURIComponent(sheetRecuperado));
+    const [gestionesRes, recuperadoRes, creditosRes] = await Promise.all([
+      fetch(proxy + encodeURIComponent(sheetGestiones)),
+      fetch(proxy + encodeURIComponent(sheetRecuperado)),
+      fetch(proxy + encodeURIComponent(sheetCreditos))
+    ]);
+
+    if(!gestionesRes.ok || !recuperadoRes.ok || !creditosRes.ok){
+      alert("No se pudieron cargar todos los datos. Revisa conexión o permisos del CSV.");
+      return;
+    }
 
     const gestiones = parseCSV(await gestionesRes.text());
     const recuperado = parseCSV(await recuperadoRes.text());
+    const creditos = parseCSV(await creditosRes.text());
 
-    const dataGestorGest = gestiones.filter(r=>r["GESTOR"]?.toLowerCase().trim()===nombreEmpleado.toLowerCase().trim());
-    const dataGestorRec = recuperado.filter(r=>r["GESTOR"]?.toLowerCase().trim()===nombreEmpleado.toLowerCase().trim());
+    console.log('Gestiones:', gestiones);
+    console.log('Recuperado:', recuperado);
+    console.log('Créditos:', creditos);
 
-    const meses = [...new Set([...dataGestorGest.map(d=>d["MES"]), ...dataGestorRec.map(d=>d["MES"])]).values()].filter(m=>m);
+    const dataGestorGest = gestiones.filter(r=>normalize(r["GESTOR"])===normalize(nombreEmpleado));
+    const dataGestorRec = recuperado.filter(r=>normalize(r["GESTOR"])===normalize(nombreEmpleado));
+    const dataGestorCred = creditos.filter(r=>normalize(r["GESTOR"])===normalize(nombreEmpleado));
+
+    const ordenMeses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    const mesesSet = new Set([
+      ...dataGestorGest.map(d=>normalizeMes(d["MES"])),
+      ...dataGestorRec.map(d=>normalizeMes(d["MES"])),
+      ...dataGestorCred.map(d=>normalizeMes(d["MES"]))
+    ]);
+    const meses = Array.from(mesesSet).filter(m=>m).sort((a,b)=> ordenMeses.indexOf(a)-ordenMeses.indexOf(b));
 
     const consolidado = meses.map(m=>{
-      const pagosMes = dataGestorRec.filter(d=>d["MES"]===m);
-      const gestionesMes = dataGestorGest.filter(d=>d["MES"]===m);
-
-      // SUMA RECUPERADO
-      const totalRec = pagosMes.reduce((s,p)=>{
-        let monto = p["RECUPERADO"] || "0";   
-        monto = monto.replace(/\$/g,'').replace(/,/g,'').trim();
-        return s + Number(monto || 0);
-      },0);
-
-      const objetivo = 10000; // <-- Objetivo fijo
+      const pagosMes = dataGestorRec.filter(d=>normalizeMes(d["MES"])===m);
+      const gestionesMes = dataGestorGest.filter(d=>normalizeMes(d["MES"])===m);
+      const creditosMes = dataGestorCred.filter(d=>normalizeMes(d["MES"])===m);
+      const totalRec = pagosMes.reduce((s,p)=> s + toNumber(p["RECUPERADO"]), 0);
+      const totalCred = creditosMes.reduce((s,c)=> s + toNumber(c["MONTO POR CUOTA"]),0);
+      const objetivo = 10000;
       const faltante = Math.max(0, objetivo - totalRec);
       const porc = ((totalRec/objetivo)*100).toFixed(1);
-
-      return {
-        MES: m,
-        RECUPERADO: totalRec,
-        OBJETIVO: objetivo,
-        FALTANTE: faltante,
-        CREDITOS: gestionesMes.length,
-        GESTIONES: gestionesMes.length,
-        PORC: porc
-      };
+      return { MES: m.charAt(0).toUpperCase()+m.slice(1), RECUPERADO: totalRec, OBJETIVO: objetivo, FALTANTE: faltante, CREDITOS: creditosMes.length, GESTIONES: gestionesMes.length, PORC: porc };
     });
 
     renderTable(consolidado);
     renderCharts(consolidado);
 
-  } catch(e){
+  }catch(e){
     console.error("Error cargando datos:", e);
     alert("No se pudieron cargar los datos del empleado.");
   }
@@ -167,34 +163,40 @@ async function loadAll(){
 // -------------------------
 function renderTable(data){
   const tbody = document.getElementById("consolidadoTbody");
-  tbody.innerHTML = "";
+  tbody.innerHTML="";
   data.forEach(r=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
       <td>${r.MES}</td>
-      <td>${money(r.RECUPERADO)}<br><button class="btn-linklike" onclick="window.location.href='recuperado.html?empleado=${encodeURIComponent(nombreEmpleado)}'">Ver</button></td>
+      <td>${money(r.RECUPERADO)}<br>
+        <button class="btn-linklike" onclick="window.location.href='recuperado.html?empleado=${encodeURIComponent(nombreEmpleado)}&mes=${encodeURIComponent(r.MES)}'">Ver</button>
+      </td>
       <td>${money(r.FALTANTE)}</td>
       <td>${money(r.OBJETIVO)}</td>
-      <td>${r.CREDITOS}<br><button class="btn-linklike" onclick="window.location.href='creditos.html?empleado=${encodeURIComponent(nombreEmpleado)}'">Ver</button></td>
-      <td>${r.GESTIONES}<br><button class="btn-linklike" onclick="window.location.href='gestiones.html?empleado=${encodeURIComponent(nombreEmpleado)}'">Ver</button></td>
-      <td>${r.PORC>=85 ? `<span class='indicator-ok'>${r.PORC}%</span>` : `<span class='indicator-bad'>${r.PORC}%</span>`}</td>
+      <td>${r.CREDITOS}<br>
+        <button class="btn-linklike" onclick="window.location.href='creditos.html?empleado=${encodeURIComponent(nombreEmpleado)}&mes=${encodeURIComponent(r.MES)}'">Ver</button>
+      </td>
+      <td>${r.GESTIONES}<br>
+        <button class="btn-linklike" onclick="window.location.href='gestiones.html?empleado=${encodeURIComponent(nombreEmpleado)}&mes=${encodeURIComponent(r.MES)}'">Ver</button>
+      </td>
+      <td>${r.PORC>=85?`<span class='indicator-ok'>${r.PORC}%</span>`:`<span class='indicator-bad'>${r.PORC}%</span>`}</td>
     `;
     tbody.appendChild(tr);
   });
 
   const totalRec = data.reduce((s,d)=>s+Number(d.RECUPERADO),0);
-  const totalObj = 10000; // Fijo
+  const totalObj = 10000;
   const totalFal = Math.max(0,totalObj-totalRec);
   const porc = ((totalRec/totalObj)*100).toFixed(1);
 
-  document.getElementById("kpiRec").textContent = money(totalRec);
-  document.getElementById("kpiObj").textContent = money(totalObj);
-  document.getElementById("kpiFal").textContent = money(totalFal);
-  document.getElementById("kpiPor").textContent = porc+"%";
+  document.getElementById("kpiRec").textContent=money(totalRec);
+  document.getElementById("kpiObj").textContent=money(totalObj);
+  document.getElementById("kpiFal").textContent=money(totalFal);
+  document.getElementById("kpiPor").textContent=porc+"%";
 }
 
 // -------------------------
-// GRÁFICOS
+// RENDER GRÁFICOS CON ANÁLISIS TÉCNICO
 // -------------------------
 let chartPie, chartBar, chartLine;
 function renderCharts(data){
@@ -206,12 +208,31 @@ function renderCharts(data){
   if(chartBar) chartBar.destroy();
   if(chartLine) chartLine.destroy();
 
-  chartPie = new Chart(ctxPie,{type:'pie',data:{labels:data.map(d=>d.MES), datasets:[{data:data.map(d=>d.RECUPERADO)}]}});
+  const pieColors = data.map(d=> d.RECUPERADO/d.OBJETIVO*100 >=85 ? '#28a745' : d.RECUPERADO/d.OBJETIVO*100 >=60 ? '#ffc107' : '#d9534f');
+  chartPie = new Chart(ctxPie,{
+    type:'pie',
+    data:{labels:data.map(d=>d.MES), datasets:[{data:data.map(d=>d.RECUPERADO), backgroundColor:pieColors}]},
+    options:{plugins:{tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${money(ctx.raw)} (${((data[ctx.dataIndex].RECUPERADO/data[ctx.dataIndex].OBJETIVO)*100).toFixed(1)}%)`}}}, legend:{position:'bottom'}}
+  });
 
-  chartBar = new Chart(ctxBar,{type:'bar',data:{labels:data.map(d=>d.MES), datasets:[{label:'Recuperado',data:data.map(d=>d.RECUPERADO)}, {label:'Objetivo', data:data.map(d=>d.OBJETIVO)}]}});
+  const barColors = data.map(d=> d.RECUPERADO/d.OBJETIVO*100 >=85 ? '#28a745' : d.RECUPERADO/d.OBJETIVO*100 >=60 ? '#ffc107' : '#d9534f');
+  chartBar = new Chart(ctxBar,{
+    type:'bar',
+    data:{labels:data.map(d=>d.MES), datasets:[
+      {label:'Recuperado', data:data.map(d=>d.RECUPERADO), backgroundColor:barColors},
+      {label:'Objetivo', data:data.map(d=>d.OBJETIVO), backgroundColor:'#0d6efd'}
+    ]},
+    options:{plugins:{tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='Recuperado'?`${ctx.dataset.label}: ${money(ctx.raw)} (${((ctx.raw/data[ctx.dataIndex].OBJETIVO)*100).toFixed(1)}%)`:`${ctx.dataset.label}: ${money(ctx.raw)}`}}}}, scales:{y:{beginAtZero:true}}
+  });
 
-  chartLine = new Chart(ctxLine,{type:'line',data:{labels:data.map(d=>d.MES), datasets:[{label:'Recuperado',data:data.map(d=>d.RECUPERADO)}, {label:'Objetivo', data:data.map(d=>d.OBJETIVO)}]}});
-
+  chartLine = new Chart(ctxLine,{
+    type:'line',
+    data:{labels:data.map(d=>d.MES), datasets:[
+      {label:'Recuperado', data:data.map(d=>d.RECUPERADO), borderColor:'#28a745', backgroundColor:'rgba(40,167,69,0.2)', fill:true, tension:0.2},
+      {label:'Objetivo', data:data.map(d=>d.OBJETIVO), borderColor:'#0d6efd', borderDash:[5,5], fill:false}
+    ]},
+    options:{plugins:{tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${money(ctx.raw)} (${((ctx.raw/data[ctx.dataIndex].OBJETIVO)*100).toFixed(1)}%)`}}}}, scales:{y:{beginAtZero:true}}
+  });
 }
 
 document.addEventListener("DOMContentLoaded", loadAll);
